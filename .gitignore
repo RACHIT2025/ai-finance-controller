@@ -14,3 +14,7 @@ venv/
 .DS_Store
 data/chroma_db/
 *.log
+
+# Ignore all markdown documentation files except README.md
+*.md
+!README.md
