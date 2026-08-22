@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Razorpay AI Finance Controller | Settlement Reconciliation & Q&A</title>
+  <meta name="description" content="Explainable, tamper-evident financial settlement reconciliation engine with natural language Q&A and honest exception reporting for Razorpay AI Buildathon.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- TOP NAVIGATION -->
+    <header class="navbar">
+      <div class="brand">
+        <div class="logo-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M2 17L12 22L22 17" stroke="#818cf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M2 12L12 17L22 12" stroke="#6366f1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <h1>FinController <span class="badge-track">Razorpay AI Track</span></h1>
+          <p class="subtitle">Settlement Reconciliation & Audit Agent</p>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <div class="audit-status-pill" id="auditStatusPill">
+          <span class="status-dot green"></span>
+          <span id="auditPillText">Audit Chain: Verified (SHA-256)</span>
+        </div>
+        <button id="btnRunReconcile" class="btn btn-primary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+          Run Reconciliation
+        </button>
+      </div>
+    </header>
+
+    <!-- KPI STATS CARDS -->
+    <section class="kpi-grid">
+      <div class="kpi-card glow-blue">
+        <div class="kpi-header">
+          <span class="kpi-title">Reconciled Volume</span>
+          <span class="kpi-icon">💰</span>
+        </div>
+        <div class="kpi-value" id="kpiReconciledVol">₹0.00</div>
+        <div class="kpi-meta" id="kpiTotalVol">Processed ₹0.00 total</div>
+      </div>
+
+      <div class="kpi-card glow-emerald">
+        <div class="kpi-header">
+          <span class="kpi-title">Auto-Match Precision</span>
+          <span class="kpi-icon">🎯</span>
+        </div>
+        <div class="kpi-value" id="kpiAutoRate">0.0%</div>
+        <div class="kpi-meta" id="kpiMatchedPairs">0 high-confidence pairs</div>
+      </div>
+
+      <div class="kpi-card glow-amber">
+        <div class="kpi-header">
+          <span class="kpi-title">Needs Human Review</span>
+          <span class="kpi-icon">⚠️</span>
+        </div>
+        <div class="kpi-value" id="kpiHumanReview">0</div>
+        <div class="kpi-meta">Flagged ambiguous / duplicate cases</div>
+      </div>
+
+      <div class="kpi-card glow-indigo">
+        <div class="kpi-header">
+          <span class="kpi-title">Gateway Fees Accounted</span>
+          <span class="kpi-icon">🧾</span>
+        </div>
+        <div class="kpi-value" id="kpiFeesVol">₹0.00</div>
+        <div class="kpi-meta">2% MDR + 18% GST deductions</div>
+      </div>
+
+      <div class="kpi-card glow-purple">
+        <div class="kpi-header">
+          <span class="kpi-title">Audit Chain Blocks</span>
+          <span class="kpi-icon">🔒</span>
+        </div>
+        <div class="kpi-value" id="kpiAuditBlocks">0</div>
+        <div class="kpi-meta" id="kpiChainHead">Genesis sealed</div>
+      </div>
+    </section>
+
+    <!-- NAVIGATION TABS -->
+    <div class="tab-nav">
+      <button class="tab-btn active" data-tab="tab-reconciliation">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        Reconciliation Table & Exceptions
+      </button>
+      <button class="tab-btn" data-tab="tab-qa">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        AI Q&A & Controller Copilot
+      </button>
+      <button class="tab-btn" data-tab="tab-audit">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        Tamper-Evident Audit Trail
+      </button>
+      <button class="tab-btn" data-tab="tab-resilience">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        Resilience & Fault Recovery
+      </button>
+    </div>
+
+    <!-- TAB CONTENTS -->
+    <main class="tab-container">
+      <!-- TAB 1: RECONCILIATION EXPLORER -->
+      <section id="tab-reconciliation" class="tab-content active">
+        <div class="section-toolbar">
+          <div class="filter-group">
+            <button class="filter-chip active" data-filter="ALL">All Records</button>
+            <button class="filter-chip" data-filter="AUTO_MATCHED">Auto-Matched (<span id="cntAuto">0</span>)</button>
+            <button class="filter-chip chip-warning" data-filter="NEEDS_HUMAN_REVIEW">Needs Human Review (<span id="cntReview">0</span>)</button>
+            <button class="filter-chip chip-danger" data-filter="UNMATCHED_GW">Unmatched Gateway (<span id="cntUnmatchedGw">0</span>)</button>
+            <button class="filter-chip chip-danger" data-filter="UNMATCHED_BNK">Unmatched Bank (<span id="cntUnmatchedBnk">0</span>)</button>
+          </div>
+          <div class="search-box">
+            <input type="text" id="tableSearchInput" placeholder="Filter by Ref ID, UTR, or Amount...">
+          </div>
+        </div>
+
+        <div class="table-card">
+          <div class="table-responsive">
+            <table class="data-table" id="reconTable">
+              <thead>
+                <tr>
+                  <th>Category</th>
+                  <th>Match / Entity ID</th>
+                  <th>Reason Code</th>
+                  <th>Gateway Refs</th>
+                  <th>Bank Refs</th>
+                  <th>Discrepancy</th>
+                  <th>Confidence</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="reconTableBody">
+                <tr>
+                  <td colspan="8" class="text-center empty-state">Click "Run Reconciliation" to load and verify transactions.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 2: AI Q&A AGENT -->
+      <section id="tab-qa" class="tab-content">
+        <div class="qa-layout">
+          <div class="qa-chat-card">
+            <div class="qa-header">
+              <div>
+                <h2>Finance Controller AI Assistant</h2>
+                <p class="text-muted">Grounded RAG agent answering natural language queries over deterministic outputs.</p>
+              </div>
+              <div class="rules-badge">Strict Rule: LLM Never Computes Math</div>
+            </div>
+
+            <div class="quick-prompts">
+              <span class="quick-prompt-label">Quick Queries:</span>
+              <button class="prompt-chip" data-query="Why did pay_AMBIG_DUP_00_A need human review?">Ambiguous Case pay_AMBIG_DUP_00_A</button>
+              <button class="prompt-chip" data-query="Explain split batch settlement UTR_BATCH_0000">Split Batch UTR_BATCH_0000</button>
+              <button class="prompt-chip" data-query="What is our total unmatched bank exposure?">Total Unmatched Bank Exposure</button>
+              <button class="prompt-chip" data-query="How were gateway fees calculated for fee-adjusted matches?">Fee Deduction Logic</button>
+            </div>
+
+            <div class="chat-messages" id="chatMessages">
+              <div class="chat-message bot">
+                <div class="message-avatar">🤖</div>
+                <div class="message-body">
+                  <p>Hello! I am your AI Finance Controller Assistant. I can explain match decisions, breakdown split settlements, or investigate exceptions flagged for human review. How can I assist you today?</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="chat-input-bar">
+              <input type="text" id="chatInput" placeholder="Ask anything about reconciliation results, reason codes, or exceptions...">
+              <button id="btnSendChat" class="btn btn-primary">Ask Copilot</button>
+            </div>
+          </div>
+
+          <div class="summary-side-card">
+            <h3>Executive Summary</h3>
+            <div id="executiveSummaryContent" class="markdown-preview">
+              <p class="text-muted">Run reconciliation to generate the daily executive summary.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 3: AUDIT TRAIL -->
+      <section id="tab-audit" class="tab-content">
+        <div class="audit-layout">
+          <div class="audit-header-banner">
+            <div>
+              <h2>Cryptographic SHA-256 Hash Chain</h2>
+              <p class="text-muted">Every match, human review flag, and settlement reconciliation is permanently sealed in an immutable block.</p>
+            </div>
+            <button id="btnVerifyChain" class="btn btn-secondary">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              Verify Cryptographic Integrity
+            </button>
+          </div>
+
+          <div id="verificationAlert" class="verification-alert alert-success">
+            <div class="alert-icon">🛡️</div>
+            <div class="alert-content">
+              <h4>Tamper-Evident Verification: PASSED</h4>
+              <p id="verificationMessage">All block hashes, previous-hash linkages, and payload checksums are 100% mathematically valid.</p>
+            </div>
+          </div>
+
+          <div class="audit-chain-timeline" id="auditChainTimeline">
+            <!-- Dynamically populated blocks -->
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 4: RESILIENCE & FAILURE RECOVERY -->
+      <section id="tab-resilience" class="tab-content">
+        <div class="resilience-layout">
+          <div class="resilience-controls">
+            <h3>Failure Recovery & Fault Injection Lab</h3>
+            <p class="text-muted">Visually demonstrate how FinController detects and handles runtime faults gracefully.</p>
+            
+            <div class="simulation-buttons">
+              <button class="btn btn-outline" id="btnSimulateTimeout">
+                ⚡ Simulate Upstream API 504 Timeout & Backoff
+              </button>
+              <button class="btn btn-outline" id="btnSimulateLLMOutage">
+                🔌 Simulate LLM Outage & Deterministic Fallback
+              </button>
+              <button class="btn btn-outline btn-danger-outline" id="btnSimulateTamper">
+                🚨 Simulate Cryptographic Ledger Tampering
+              </button>
+            </div>
+          </div>
+
+          <div class="terminal-card">
+            <div class="terminal-header">
+              <div class="terminal-dots">
+                <span class="dot red"></span>
+                <span class="dot yellow"></span>
+                <span class="dot green"></span>
+              </div>
+              <span class="terminal-title">Live Telemetry & Resilience Stream</span>
+              <button id="btnClearTelemetry" class="btn-sm">Clear</button>
+            </div>
+            <div class="terminal-body" id="telemetryLogBody">
+              <!-- Dynamically populated logs -->
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="app-footer">
+      <p>Built for <strong>Razorpay AI Buildathon 2026</strong> | AI Finance Controller Track</p>
+      <div class="footer-links">
+        <span>Deterministic Multi-Pass Engine</span>
+        <span>•</span>
+        <span>LangChain RAG</span>
+        <span>•</span>
+        <span>SHA-256 Hash Chain</span>
+      </div>
+    </footer>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

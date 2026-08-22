@@ -1,0 +1,118 @@
+entity_id,amount,fee,tax,net_amount,currency,settled_at,utr,merchant_name,description,status
+pay_EXACT_0018_5010,4503.36,0.0,0.0,4503.36,INR,2026-08-03 10:00:00,UTR_EX_0018,Merchant_44,Standard checkout settlement pay_EXACT_0018_5010,settled
+pay_FEE_0003_7916,30224.04,604.48,108.81,29510.75,INR,2026-08-06 07:00:00,UTR_FEE_0003,SaaS Platform Pvt Ltd,Subscription plan payment pay_FEE_0003_7916,settled
+pay_SPLIT_B0_S0_652,6531.59,0.0,0.0,6531.59,INR,2026-08-02 21:00:00,UTR_BATCH_0000,Batch Store 0,Batch item 0 for settlement UTR_BATCH_0000,settled
+pay_FEE_0005_9669,13319.29,266.39,47.95,13004.95,INR,2026-08-02 07:00:00,UTR_FEE_0005,SaaS Platform Pvt Ltd,Subscription plan payment pay_FEE_0005_9669,settled
+pay_SPLIT_B3_S0_172,5084.94,0.0,0.0,5084.94,INR,2026-08-06 04:00:00,UTR_BATCH_0003,Batch Store 3,Batch item 0 for settlement UTR_BATCH_0003,settled
+pay_DELAY_0010_8956,9442.41,0.0,0.0,9442.41,INR,2026-08-21 09:00:00,UTR_DELAY_0010,Ecommerce Corp,Friday payment settled Monday pay_DELAY_0010_8956,settled
+pay_FUZZY_005ABC,9950.16,0.0,0.0,9950.16,INR,2026-08-04 16:00:00,pay_FUZZY_005ABC,Retail Store Online,Order pay_FUZZY_005ABC,settled
+pay_FEE_0006_2876,34403.81,688.08,123.85,33591.88,INR,2026-08-05 01:00:00,UTR_FEE_0006,SaaS Platform Pvt Ltd,Subscription plan payment pay_FEE_0006_2876,settled
+pay_DELAY_0012_3697,7753.06,0.0,0.0,7753.06,INR,2026-08-25 09:00:00,UTR_DELAY_0012,Ecommerce Corp,Friday payment settled Monday pay_DELAY_0012_3697,settled
+pay_SPLIT_B4_S2_199,5953.9,0.0,0.0,5953.9,INR,2026-08-07 03:00:00,UTR_BATCH_0004,Batch Store 4,Batch item 2 for settlement UTR_BATCH_0004,settled
+pay_FEE_0004_7252,30198.53,603.97,108.71,29485.85,INR,2026-08-07 04:00:00,UTR_FEE_0004,SaaS Platform Pvt Ltd,Subscription plan payment pay_FEE_0004_7252,settled
+pay_SPLIT_B2_S0_172,6247.05,0.0,0.0,6247.05,INR,2026-08-05 08:00:00,UTR_BATCH_0002,Batch Store 2,Batch item 0 for settlement UTR_BATCH_0002,settled
+pay_ROUND_0006,6745.5,0.0,0.0,6745.5,INR,2026-08-04 14:00:00,UTR_RND_0006,Direct D2C,Rounding case pay_ROUND_0006,settled
+pay_AMBIG_DUP_02_B,999.0,0.0,0.0,999.0,INR,2026-08-03 09:05:00,UTR_AMBIG_02,Ambiguous Merchant,Duplicate payment 2,settled
+pay_ROUND_0004,2839.5,0.0,0.0,2839.5,INR,2026-08-01 19:00:00,UTR_RND_0004,Direct D2C,Rounding case pay_ROUND_0004,settled
+pay_SPLIT_B4_S3_533,4466.61,0.0,0.0,4466.61,INR,2026-08-06 21:00:00,UTR_BATCH_0004,Batch Store 4,Batch item 3 for settlement UTR_BATCH_0004,settled
+pay_SPLIT_B3_S2_235,6340.12,0.0,0.0,6340.12,INR,2026-08-05 23:00:00,UTR_BATCH_0003,Batch Store 3,Batch item 2 for settlement UTR_BATCH_0003,settled
+pay_DELAY_0014_8454,6206.61,0.0,0.0,6206.61,INR,2026-08-29 09:00:00,UTR_DELAY_0014,Ecommerce Corp,Friday payment settled Monday pay_DELAY_0014_8454,settled
+pay_DELAY_0009_4872,4244.13,0.0,0.0,4244.13,INR,2026-08-19 09:00:00,UTR_DELAY_0009,Ecommerce Corp,Friday payment settled Monday pay_DELAY_0009_4872,settled
+pay_EXACT_0024_9830,6937.17,0.0,0.0,6937.17,INR,2026-08-04 12:00:00,UTR_EX_0024,Merchant_64,Standard checkout settlement pay_EXACT_0024_9830,settled
+pay_SPLIT_B1_S1_562,2726.03,0.0,0.0,2726.03,INR,2026-08-04 05:00:00,UTR_BATCH_0001,Batch Store 1,Batch item 1 for settlement UTR_BATCH_0001,settled
+pay_ROUND_0005,6384.57,0.0,0.0,6384.57,INR,2026-08-03 19:00:00,UTR_RND_0005,Direct D2C,Rounding case pay_ROUND_0005,settled
+pay_AMBIG_DUP_05_B,999.0,0.0,0.0,999.0,INR,2026-08-06 09:05:00,UTR_AMBIG_05,Ambiguous Merchant,Duplicate payment 2,settled
+pay_DELAY_0001_2790,5602.83,0.0,0.0,5602.83,INR,2026-08-03 09:00:00,UTR_DELAY_0001,Ecommerce Corp,Friday payment settled Monday pay_DELAY_0001_2790,settled
+pay_EXACT_0007_7924,8836.14,0.0,0.0,8836.14,INR,2026-08-02 05:00:00,UTR_EX_0007,Merchant_37,Standard checkout settlement pay_EXACT_0007_7924,settled
+pay_DELAY_0011_7570,16390.31,0.0,0.0,16390.31,INR,2026-08-23 09:00:00,UTR_DELAY_0011,Ecommerce Corp,Friday payment settled Monday pay_DELAY_0011_7570,settled
+pay_UNSETTLED_ESCROW_0000,4799.47,0.0,0.0,4799.47,INR,2026-08-04 09:00:00,,High Risk Merchant,Payment held in fraud/risk escrow,pending
+pay_EXACT_0012_6925,14645.13,0.0,0.0,14645.13,INR,2026-08-05 04:00:00,UTR_EX_0012,Merchant_18,Standard checkout settlement pay_EXACT_0012_6925,settled
+pay_EXACT_0003_1488,2795.53,0.0,0.0,2795.53,INR,2026-08-02 15:00:00,UTR_EX_0003,Merchant_74,Standard checkout settlement pay_EXACT_0003_1488,settled
+pay_SPLIT_B0_S1_305,6277.69,0.0,0.0,6277.69,INR,2026-08-03 02:00:00,UTR_BATCH_0000,Batch Store 0,Batch item 1 for settlement UTR_BATCH_0000,settled
+pay_FEE_0000_7543,18737.83,374.76,67.46,18295.61,INR,2026-08-03 16:00:00,UTR_FEE_0000,SaaS Platform Pvt Ltd,Subscription plan payment pay_FEE_0000_7543,settled
+pay_FEE_0015_4923,3838.33,76.77,13.82,3747.74,INR,2026-08-03 01:00:00,UTR_FEE_0015,SaaS Platform Pvt Ltd,Subscription plan payment pay_FEE_0015_4923,settled
+pay_AMBIG_DUP_01_B,999.0,0.0,0.0,999.0,INR,2026-08-02 09:05:00,UTR_AMBIG_01,Ambiguous Merchant,Duplicate payment 2,settled
+pay_FEE_0016_2403,36863.47,737.27,132.71,35993.49,INR,2026-08-02 22:00:00,UTR_FEE_0016,SaaS Platform Pvt Ltd,Subscription plan payment pay_FEE_0016_2403,settled
+pay_UNSETTLED_ESCROW_0001,17053.76,0.0,0.0,17053.76,INR,2026-08-05 09:00:00,,High Risk Merchant,Payment held in fraud/risk escrow,pending
+pay_EXACT_0021_5386,2121.62,0.0,0.0,2121.62,INR,2026-08-04 10:00:00,UTR_EX_0021,Merchant_50,Standard checkout settlement pay_EXACT_0021_5386,settled
+pay_UNSETTLED_ESCROW_0005,3926.16,0.0,0.0,3926.16,INR,2026-08-09 09:00:00,,High Risk Merchant,Payment held in fraud/risk escrow,pending
+pay_DELAY_0006_2604,2334.71,0.0,0.0,2334.71,INR,2026-08-13 09:00:00,UTR_DELAY_0006,Ecommerce Corp,Friday payment settled Monday pay_DELAY_0006_2604,settled
+pay_FEE_0019_5342,26856.02,537.12,96.68,26222.22,INR,2026-08-06 17:00:00,UTR_FEE_0019,SaaS Platform Pvt Ltd,Subscription plan payment pay_FEE_0019_5342,settled
+pay_FUZZY_003ABC,4857.56,0.0,0.0,4857.56,INR,2026-08-03 08:00:00,pay_FUZZY_003ABC,Retail Store Online,Order pay_FUZZY_003ABC,settled
+pay_EXACT_0010_1711,18378.43,0.0,0.0,18378.43,INR,2026-08-04 06:00:00,UTR_EX_0010,Merchant_25,Standard checkout settlement pay_EXACT_0010_1711,settled
+pay_SPLIT_B1_S2_165,4028.51,0.0,0.0,4028.51,INR,2026-08-03 23:00:00,UTR_BATCH_0001,Batch Store 1,Batch item 2 for settlement UTR_BATCH_0001,settled
+pay_SPLIT_B5_S0_789,5920.73,0.0,0.0,5920.73,INR,2026-08-07 22:00:00,UTR_BATCH_0005,Batch Store 5,Batch item 0 for settlement UTR_BATCH_0005,settled
+pay_FEE_0014_6947,44057.37,881.15,158.61,43017.61,INR,2026-08-05 11:00:00,UTR_FEE_0014,SaaS Platform Pvt Ltd,Subscription plan payment pay_FEE_0014_6947,settled
+pay_ROUND_0001,8588.2,0.0,0.0,8588.2,INR,2026-08-01 22:00:00,UTR_RND_0001,Direct D2C,Rounding case pay_ROUND_0001,settled
+pay_SPLIT_B5_S1_200,2363.68,0.0,0.0,2363.68,INR,2026-08-07 21:00:00,UTR_BATCH_0005,Batch Store 5,Batch item 1 for settlement UTR_BATCH_0005,settled
+pay_SPLIT_B2_S1_334,2404.4,0.0,0.0,2404.4,INR,2026-08-05 08:00:00,UTR_BATCH_0002,Batch Store 2,Batch item 1 for settlement UTR_BATCH_0002,settled
+pay_FUZZY_009ABC,9373.51,0.0,0.0,9373.51,INR,2026-08-02 02:00:00,pay_FUZZY_009ABC,Retail Store Online,Order pay_FUZZY_009ABC,settled
+pay_DELAY_0013_7396,5875.85,0.0,0.0,5875.85,INR,2026-08-27 09:00:00,UTR_DELAY_0013,Ecommerce Corp,Friday payment settled Monday pay_DELAY_0013_7396,settled
+pay_EXACT_0015_5554,11608.55,0.0,0.0,11608.55,INR,2026-08-03 08:00:00,UTR_EX_0015,Merchant_30,Standard checkout settlement pay_EXACT_0015_5554,settled
+pay_ROUND_0002,6153.28,0.0,0.0,6153.28,INR,2026-08-02 20:00:00,UTR_RND_0002,Direct D2C,Rounding case pay_ROUND_0002,settled
+pay_AMBIG_DUP_00_A,999.0,0.0,0.0,999.0,INR,2026-08-01 09:00:00,UTR_AMBIG_00,Ambiguous Merchant,Duplicate payment 1,settled
+pay_EXACT_0022_4483,16558.25,0.0,0.0,16558.25,INR,2026-08-03 12:00:00,UTR_EX_0022,Merchant_92,Standard checkout settlement pay_EXACT_0022_4483,settled
+pay_SPLIT_B4_S1_926,4442.36,0.0,0.0,4442.36,INR,2026-08-07 07:00:00,UTR_BATCH_0004,Batch Store 4,Batch item 1 for settlement UTR_BATCH_0004,settled
+pay_SPLIT_B1_S3_667,3380.69,0.0,0.0,3380.69,INR,2026-08-04 05:00:00,UTR_BATCH_0001,Batch Store 1,Batch item 3 for settlement UTR_BATCH_0001,settled
+pay_EXACT_0023_8517,4000.35,0.0,0.0,4000.35,INR,2026-08-02 03:00:00,UTR_EX_0023,Merchant_41,Standard checkout settlement pay_EXACT_0023_8517,settled
+pay_DELAY_0003_3296,8461.05,0.0,0.0,8461.05,INR,2026-08-07 09:00:00,UTR_DELAY_0003,Ecommerce Corp,Friday payment settled Monday pay_DELAY_0003_3296,settled
+pay_EXACT_0002_9935,2630.0,0.0,0.0,2630.0,INR,2026-08-03 16:00:00,UTR_EX_0002,Merchant_14,Standard checkout settlement pay_EXACT_0002_9935,settled
+pay_EXACT_0008_6514,3004.15,0.0,0.0,3004.15,INR,2026-08-03 10:00:00,UTR_EX_0008,Merchant_22,Standard checkout settlement pay_EXACT_0008_6514,settled
+pay_FEE_0002_2796,8489.22,169.78,30.56,8288.88,INR,2026-08-03 21:00:00,UTR_FEE_0002,SaaS Platform Pvt Ltd,Subscription plan payment pay_FEE_0002_2796,settled
+pay_DELAY_0004_5563,9133.36,0.0,0.0,9133.36,INR,2026-08-09 09:00:00,UTR_DELAY_0004,Ecommerce Corp,Friday payment settled Monday pay_DELAY_0004_5563,settled
+pay_UNSETTLED_ESCROW_0002,16164.77,0.0,0.0,16164.77,INR,2026-08-06 09:00:00,,High Risk Merchant,Payment held in fraud/risk escrow,pending
+pay_FEE_0012_7126,38363.03,767.26,138.11,37457.66,INR,2026-08-02 05:00:00,UTR_FEE_0012,SaaS Platform Pvt Ltd,Subscription plan payment pay_FEE_0012_7126,settled
+pay_SPLIT_B1_S0_765,4240.52,0.0,0.0,4240.52,INR,2026-08-04 00:00:00,UTR_BATCH_0001,Batch Store 1,Batch item 0 for settlement UTR_BATCH_0001,settled
+pay_EXACT_0004_1434,14250.5,0.0,0.0,14250.5,INR,2026-08-05 05:00:00,UTR_EX_0004,Merchant_93,Standard checkout settlement pay_EXACT_0004_1434,settled
+pay_ROUND_0007,5466.89,0.0,0.0,5466.89,INR,2026-08-02 23:00:00,UTR_RND_0007,Direct D2C,Rounding case pay_ROUND_0007,settled
+pay_EXACT_0009_6881,21263.61,0.0,0.0,21263.61,INR,2026-08-04 15:00:00,UTR_EX_0009,Merchant_43,Standard checkout settlement pay_EXACT_0009_6881,settled
+pay_AMBIG_DUP_00_B,999.0,0.0,0.0,999.0,INR,2026-08-01 09:05:00,UTR_AMBIG_00,Ambiguous Merchant,Duplicate payment 2,settled
+pay_AMBIG_DUP_05_A,999.0,0.0,0.0,999.0,INR,2026-08-06 09:00:00,UTR_AMBIG_05,Ambiguous Merchant,Duplicate payment 1,settled
+pay_FUZZY_002ABC,10942.46,0.0,0.0,10942.46,INR,2026-08-04 09:00:00,pay_FUZZY_002ABC,Retail Store Online,Order pay_FUZZY_002ABC,settled
+pay_ROUND_0009,2767.97,0.0,0.0,2767.97,INR,2026-08-03 16:00:00,UTR_RND_0009,Direct D2C,Rounding case pay_ROUND_0009,settled
+pay_UNSETTLED_ESCROW_0007,9979.65,0.0,0.0,9979.65,INR,2026-08-11 09:00:00,,High Risk Merchant,Payment held in fraud/risk escrow,pending
+pay_EXACT_0020_4752,20634.16,0.0,0.0,20634.16,INR,2026-08-03 02:00:00,UTR_EX_0020,Merchant_61,Standard checkout settlement pay_EXACT_0020_4752,settled
+pay_UNSETTLED_ESCROW_0006,8839.96,0.0,0.0,8839.96,INR,2026-08-10 09:00:00,,High Risk Merchant,Payment held in fraud/risk escrow,pending
+pay_EXACT_0016_7065,9204.13,0.0,0.0,9204.13,INR,2026-08-04 23:00:00,UTR_EX_0016,Merchant_44,Standard checkout settlement pay_EXACT_0016_7065,settled
+pay_FEE_0017_9727,38525.89,770.52,138.69,37616.68,INR,2026-08-03 13:00:00,UTR_FEE_0017,SaaS Platform Pvt Ltd,Subscription plan payment pay_FEE_0017_9727,settled
+pay_EXACT_0000_2824,1112.76,0.0,0.0,1112.76,INR,2026-08-02 21:00:00,UTR_EX_0000,Merchant_41,Standard checkout settlement pay_EXACT_0000_2824,settled
+pay_EXACT_0005_9928,10778.24,0.0,0.0,10778.24,INR,2026-08-03 19:00:00,UTR_EX_0005,Merchant_85,Standard checkout settlement pay_EXACT_0005_9928,settled
+pay_FEE_0010_2743,43655.41,873.11,157.16,42625.14,INR,2026-08-05 09:00:00,UTR_FEE_0010,SaaS Platform Pvt Ltd,Subscription plan payment pay_FEE_0010_2743,settled
+pay_SPLIT_B3_S1_785,4912.49,0.0,0.0,4912.49,INR,2026-08-06 00:00:00,UTR_BATCH_0003,Batch Store 3,Batch item 1 for settlement UTR_BATCH_0003,settled
+pay_EXACT_0011_7201,2430.6,0.0,0.0,2430.6,INR,2026-08-02 23:00:00,UTR_EX_0011,Merchant_90,Standard checkout settlement pay_EXACT_0011_7201,settled
+pay_EXACT_0006_5557,20331.05,0.0,0.0,20331.05,INR,2026-08-01 10:00:00,UTR_EX_0006,Merchant_30,Standard checkout settlement pay_EXACT_0006_5557,settled
+pay_FEE_0007_6573,6466.06,129.32,23.28,6313.46,INR,2026-08-06 20:00:00,UTR_FEE_0007,SaaS Platform Pvt Ltd,Subscription plan payment pay_FEE_0007_6573,settled
+pay_DELAY_0000_6559,14709.78,0.0,0.0,14709.78,INR,2026-08-01 09:00:00,UTR_DELAY_0000,Ecommerce Corp,Friday payment settled Monday pay_DELAY_0000_6559,settled
+pay_DELAY_0002_4116,10348.71,0.0,0.0,10348.71,INR,2026-08-05 09:00:00,UTR_DELAY_0002,Ecommerce Corp,Friday payment settled Monday pay_DELAY_0002_4116,settled
+pay_AMBIG_DUP_01_A,999.0,0.0,0.0,999.0,INR,2026-08-02 09:00:00,UTR_AMBIG_01,Ambiguous Merchant,Duplicate payment 1,settled
+pay_FUZZY_004ABC,5612.41,0.0,0.0,5612.41,INR,2026-08-02 02:00:00,pay_FUZZY_004ABC,Retail Store Online,Order pay_FUZZY_004ABC,settled
+pay_ROUND_0000,9627.85,0.0,0.0,9627.85,INR,2026-08-02 00:00:00,UTR_RND_0000,Direct D2C,Rounding case pay_ROUND_0000,settled
+pay_UNSETTLED_ESCROW_0004,11772.25,0.0,0.0,11772.25,INR,2026-08-08 09:00:00,,High Risk Merchant,Payment held in fraud/risk escrow,pending
+pay_FEE_0018_8787,47395.59,947.91,170.62,46277.06,INR,2026-08-03 23:00:00,UTR_FEE_0018,SaaS Platform Pvt Ltd,Subscription plan payment pay_FEE_0018_8787,settled
+pay_FEE_0001_9348,25182.28,503.65,90.66,24587.97,INR,2026-08-02 17:00:00,UTR_FEE_0001,SaaS Platform Pvt Ltd,Subscription plan payment pay_FEE_0001_9348,settled
+pay_FUZZY_000ABC,11359.1,0.0,0.0,11359.1,INR,2026-08-05 16:00:00,pay_FUZZY_000ABC,Retail Store Online,Order pay_FUZZY_000ABC,settled
+pay_FEE_0011_9317,30839.54,616.79,111.02,30111.73,INR,2026-08-03 20:00:00,UTR_FEE_0011,SaaS Platform Pvt Ltd,Subscription plan payment pay_FEE_0011_9317,settled
+pay_FEE_0009_9201,38336.15,766.72,138.01,37431.42,INR,2026-08-07 14:00:00,UTR_FEE_0009,SaaS Platform Pvt Ltd,Subscription plan payment pay_FEE_0009_9201,settled
+pay_EXACT_0019_4598,17273.05,0.0,0.0,17273.05,INR,2026-08-05 12:00:00,UTR_EX_0019,Merchant_17,Standard checkout settlement pay_EXACT_0019_4598,settled
+pay_AMBIG_DUP_04_A,999.0,0.0,0.0,999.0,INR,2026-08-05 09:00:00,UTR_AMBIG_04,Ambiguous Merchant,Duplicate payment 1,settled
+pay_ROUND_0008,2440.91,0.0,0.0,2440.91,INR,2026-08-03 06:00:00,UTR_RND_0008,Direct D2C,Rounding case pay_ROUND_0008,settled
+pay_AMBIG_DUP_02_A,999.0,0.0,0.0,999.0,INR,2026-08-03 09:00:00,UTR_AMBIG_02,Ambiguous Merchant,Duplicate payment 1,settled
+pay_EXACT_0014_2307,21455.28,0.0,0.0,21455.28,INR,2026-08-01 22:00:00,UTR_EX_0014,Merchant_58,Standard checkout settlement pay_EXACT_0014_2307,settled
+pay_FEE_0008_3591,23232.46,464.65,83.64,22684.17,INR,2026-08-05 00:00:00,UTR_FEE_0008,SaaS Platform Pvt Ltd,Subscription plan payment pay_FEE_0008_3591,settled
+pay_EXACT_0017_2169,15423.71,0.0,0.0,15423.71,INR,2026-08-02 07:00:00,UTR_EX_0017,Merchant_78,Standard checkout settlement pay_EXACT_0017_2169,settled
+pay_EXACT_0013_1750,16700.95,0.0,0.0,16700.95,INR,2026-08-05 12:00:00,UTR_EX_0013,Merchant_47,Standard checkout settlement pay_EXACT_0013_1750,settled
+pay_FUZZY_007ABC,3685.98,0.0,0.0,3685.98,INR,2026-08-04 21:00:00,pay_FUZZY_007ABC,Retail Store Online,Order pay_FUZZY_007ABC,settled
+pay_UNSETTLED_ESCROW_0003,5708.78,0.0,0.0,5708.78,INR,2026-08-07 09:00:00,,High Risk Merchant,Payment held in fraud/risk escrow,pending
+pay_DELAY_0008_2528,16785.06,0.0,0.0,16785.06,INR,2026-08-17 09:00:00,UTR_DELAY_0008,Ecommerce Corp,Friday payment settled Monday pay_DELAY_0008_2528,settled
+pay_AMBIG_DUP_03_B,999.0,0.0,0.0,999.0,INR,2026-08-04 09:05:00,UTR_AMBIG_03,Ambiguous Merchant,Duplicate payment 2,settled
+pay_FUZZY_008ABC,8721.46,0.0,0.0,8721.46,INR,2026-08-06 08:00:00,pay_FUZZY_008ABC,Retail Store Online,Order pay_FUZZY_008ABC,settled
+pay_EXACT_0001_4657,3918.68,0.0,0.0,3918.68,INR,2026-08-01 23:00:00,UTR_EX_0001,Merchant_96,Standard checkout settlement pay_EXACT_0001_4657,settled
+pay_DELAY_0005_2235,8811.66,0.0,0.0,8811.66,INR,2026-08-11 09:00:00,UTR_DELAY_0005,Ecommerce Corp,Friday payment settled Monday pay_DELAY_0005_2235,settled
+pay_FUZZY_006ABC,3731.49,0.0,0.0,3731.49,INR,2026-08-03 11:00:00,pay_FUZZY_006ABC,Retail Store Online,Order pay_FUZZY_006ABC,settled
+pay_AMBIG_DUP_03_A,999.0,0.0,0.0,999.0,INR,2026-08-04 09:00:00,UTR_AMBIG_03,Ambiguous Merchant,Duplicate payment 1,settled
+pay_FUZZY_001ABC,14945.07,0.0,0.0,14945.07,INR,2026-08-04 18:00:00,pay_FUZZY_001ABC,Retail Store Online,Order pay_FUZZY_001ABC,settled
+pay_FEE_0013_6310,24941.68,498.83,89.79,24353.06,INR,2026-08-03 09:00:00,UTR_FEE_0013,SaaS Platform Pvt Ltd,Subscription plan payment pay_FEE_0013_6310,settled
+pay_ROUND_0003,4336.32,0.0,0.0,4336.32,INR,2026-08-04 14:00:00,UTR_RND_0003,Direct D2C,Rounding case pay_ROUND_0003,settled
+pay_DELAY_0007_9856,15294.46,0.0,0.0,15294.46,INR,2026-08-15 09:00:00,UTR_DELAY_0007,Ecommerce Corp,Friday payment settled Monday pay_DELAY_0007_9856,settled
+pay_AMBIG_DUP_04_B,999.0,0.0,0.0,999.0,INR,2026-08-05 09:05:00,UTR_AMBIG_04,Ambiguous Merchant,Duplicate payment 2,settled
+pay_SPLIT_B4_S0_584,3457.98,0.0,0.0,3457.98,INR,2026-08-07 01:00:00,UTR_BATCH_0004,Batch Store 4,Batch item 0 for settlement UTR_BATCH_0004,settled

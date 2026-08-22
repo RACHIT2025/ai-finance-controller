@@ -1,0 +1,235 @@
+[
+  {
+    "index": 0,
+    "timestamp": "2026-08-22T18:51:09.995223+00:00",
+    "previous_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+    "block_hash": "15a3bc2fb2b8dc3fc8d83bccafe1644932b81dc90b5ecdc2c0e2d29b67c5f5ac",
+    "event_type": "GENESIS",
+    "payload_hash": "a19a887be6e69c150c80bf1bf25fd245841eaea2c6817c0db69ff9fd7101c754",
+    "payload": {
+      "message": "FinController Tamper-Evident Audit Chain Initialized",
+      "version": "1.0"
+    },
+    "operator": "FIN_CONTROLLER_ENGINE_V1"
+  },
+  {
+    "index": 1,
+    "timestamp": "2026-08-22T18:51:09.996214+00:00",
+    "previous_hash": "15a3bc2fb2b8dc3fc8d83bccafe1644932b81dc90b5ecdc2c0e2d29b67c5f5ac",
+    "block_hash": "9ebf213e100960e09e123737bd314cb0c82e327483a9dea287ffebb0412c1499",
+    "event_type": "RECONCILIATION_RUN_COMPLETED",
+    "payload_hash": "ba413aecca0118ad5262a7ef877d512d85ad9ed32a2f622c1719eea33b26856f",
+    "payload": {
+      "session_id": "cli_1787404869",
+      "summary": {
+        "total_gateway_tx": 117,
+        "total_bank_tx": 100,
+        "auto_matched_count": 86,
+        "human_review_count": 6,
+        "unmatched_gateway_count": 8,
+        "unmatched_bank_count": 8,
+        "total_gateway_volume": 1270349.0,
+        "total_bank_volume": 1526533.43,
+        "reconciled_volume": 1180116.2,
+        "unmatched_gateway_volume": 78244.8,
+        "unmatched_bank_volume": 340427.73,
+        "total_fee_volume": 13308.67,
+        "auto_match_rate": 93.16,
+        "execution_time_ms": 113.18
+      },
+      "auto_matched_count": 86,
+      "human_review_count": 6,
+      "unmatched_gateway_count": 8,
+      "unmatched_bank_count": 8,
+      "sample_match_ids": [
+        "match_exact_rzp_pay_EXACT_0018_5010_bnk_UTR_EX_0018_48",
+        "match_exact_rzp_pay_DELAY_0010_8956_bnk_UTR_DELAY_0010_28",
+        "match_exact_rzp_pay_DELAY_0012_3697_bnk_UTR_DELAY_0012_49",
+        "match_exact_rzp_pay_DELAY_0014_8454_bnk_UTR_DELAY_0014_90",
+        "match_exact_rzp_pay_DELAY_0009_4872_bnk_UTR_DELAY_0009_61",
+        "match_exact_rzp_pay_EXACT_0024_9830_bnk_UTR_EX_0024_86",
+        "match_exact_rzp_pay_DELAY_0001_2790_bnk_UTR_DELAY_0001_69",
+        "match_exact_rzp_pay_EXACT_0007_7924_bnk_UTR_EX_0007_27",
+        "match_exact_rzp_pay_DELAY_0011_7570_bnk_UTR_DELAY_0011_6",
+        "match_exact_rzp_pay_EXACT_0012_6925_bnk_UTR_EX_0012_1"
+      ]
+    },
+    "operator": "FIN_CONTROLLER_ENGINE_V1"
+  },
+  {
+    "index": 2,
+    "timestamp": "2026-08-22T18:51:22.324274+00:00",
+    "previous_hash": "9ebf213e100960e09e123737bd314cb0c82e327483a9dea287ffebb0412c1499",
+    "block_hash": "7c4a6c03669be51606f6b3b7074a85ca70fa9d70fcbeb7c3a869cef2b5cf7705",
+    "event_type": "RECONCILIATION_RUN_COMPLETED",
+    "payload_hash": "e182e4376895e1e73f430b20fbbbcc604245437257c70e2b02efb40402abb8d0",
+    "payload": {
+      "session_id": "cli_1787424682",
+      "summary": {
+        "total_gateway_tx": 117,
+        "total_bank_tx": 100,
+        "auto_matched_count": 86,
+        "human_review_count": 6,
+        "unmatched_gateway_count": 8,
+        "unmatched_bank_count": 8,
+        "total_gateway_volume": 1270349.0,
+        "total_bank_volume": 1526533.43,
+        "reconciled_volume": 1180116.2,
+        "unmatched_gateway_volume": 78244.8,
+        "unmatched_bank_volume": 340427.73,
+        "total_fee_volume": 13308.67,
+        "auto_match_rate": 93.16,
+        "execution_time_ms": 110.3
+      },
+      "auto_matched_count": 86,
+      "human_review_count": 6,
+      "unmatched_gateway_count": 8,
+      "unmatched_bank_count": 8,
+      "sample_match_ids": [
+        "match_exact_rzp_pay_EXACT_0018_5010_bnk_UTR_EX_0018_48",
+        "match_exact_rzp_pay_DELAY_0010_8956_bnk_UTR_DELAY_0010_28",
+        "match_exact_rzp_pay_DELAY_0012_3697_bnk_UTR_DELAY_0012_49",
+        "match_exact_rzp_pay_DELAY_0014_8454_bnk_UTR_DELAY_0014_90",
+        "match_exact_rzp_pay_DELAY_0009_4872_bnk_UTR_DELAY_0009_61",
+        "match_exact_rzp_pay_EXACT_0024_9830_bnk_UTR_EX_0024_86",
+        "match_exact_rzp_pay_DELAY_0001_2790_bnk_UTR_DELAY_0001_69",
+        "match_exact_rzp_pay_EXACT_0007_7924_bnk_UTR_EX_0007_27",
+        "match_exact_rzp_pay_DELAY_0011_7570_bnk_UTR_DELAY_0011_6",
+        "match_exact_rzp_pay_EXACT_0012_6925_bnk_UTR_EX_0012_1"
+      ]
+    },
+    "operator": "FIN_CONTROLLER_ENGINE_V1"
+  },
+  {
+    "index": 3,
+    "timestamp": "2026-08-22T18:55:51.378547+00:00",
+    "previous_hash": "7c4a6c03669be51606f6b3b7074a85ca70fa9d70fcbeb7c3a869cef2b5cf7705",
+    "block_hash": "f2a03d5c352f1dab44421d3356f93970002121d0ed1600c943a191bca30bb2ec",
+    "event_type": "RECONCILIATION_RUN_COMPLETED",
+    "payload_hash": "f6356dec97209c8ad0c1ba8ea866268d565b20357abb209498b954334a7860df",
+    "payload": {
+      "session_id": "cli_1787424951",
+      "summary": {
+        "total_gateway_tx": 117,
+        "total_bank_tx": 100,
+        "auto_matched_count": 86,
+        "human_review_count": 6,
+        "unmatched_gateway_count": 8,
+        "unmatched_bank_count": 8,
+        "total_gateway_volume": 1270349.0,
+        "total_bank_volume": 1526533.43,
+        "reconciled_volume": 1180116.2,
+        "unmatched_gateway_volume": 78244.8,
+        "unmatched_bank_volume": 340427.73,
+        "total_fee_volume": 13308.67,
+        "auto_match_rate": 93.16,
+        "execution_time_ms": 109.89
+      },
+      "auto_matched_count": 86,
+      "human_review_count": 6,
+      "unmatched_gateway_count": 8,
+      "unmatched_bank_count": 8,
+      "sample_match_ids": [
+        "match_exact_rzp_pay_EXACT_0018_5010_bnk_UTR_EX_0018_48",
+        "match_exact_rzp_pay_DELAY_0010_8956_bnk_UTR_DELAY_0010_28",
+        "match_exact_rzp_pay_DELAY_0012_3697_bnk_UTR_DELAY_0012_49",
+        "match_exact_rzp_pay_DELAY_0014_8454_bnk_UTR_DELAY_0014_90",
+        "match_exact_rzp_pay_DELAY_0009_4872_bnk_UTR_DELAY_0009_61",
+        "match_exact_rzp_pay_EXACT_0024_9830_bnk_UTR_EX_0024_86",
+        "match_exact_rzp_pay_DELAY_0001_2790_bnk_UTR_DELAY_0001_69",
+        "match_exact_rzp_pay_EXACT_0007_7924_bnk_UTR_EX_0007_27",
+        "match_exact_rzp_pay_DELAY_0011_7570_bnk_UTR_DELAY_0011_6",
+        "match_exact_rzp_pay_EXACT_0012_6925_bnk_UTR_EX_0012_1"
+      ]
+    },
+    "operator": "FIN_CONTROLLER_ENGINE_V1"
+  },
+  {
+    "index": 4,
+    "timestamp": "2026-08-22T18:59:54.464691+00:00",
+    "previous_hash": "f2a03d5c352f1dab44421d3356f93970002121d0ed1600c943a191bca30bb2ec",
+    "block_hash": "0e525a108a81e848dfe21d6abb663c0d19b2729e35c6805650293f1fe1d04aca",
+    "event_type": "RECONCILIATION_RUN_COMPLETED",
+    "payload_hash": "550986af31395c89764a13308de80ec0f926bcebcd2580209cb73a4b2e5b4273",
+    "payload": {
+      "session_id": "benchmark_1787405393",
+      "summary": {
+        "total_gateway_tx": 117,
+        "total_bank_tx": 100,
+        "auto_matched_count": 86,
+        "human_review_count": 6,
+        "unmatched_gateway_count": 8,
+        "unmatched_bank_count": 8,
+        "total_gateway_volume": 1270349.0,
+        "total_bank_volume": 1526533.43,
+        "reconciled_volume": 1180116.2,
+        "unmatched_gateway_volume": 78244.8,
+        "unmatched_bank_volume": 340427.73,
+        "total_fee_volume": 13308.67,
+        "auto_match_rate": 93.16,
+        "execution_time_ms": 552.05
+      },
+      "auto_matched_count": 86,
+      "human_review_count": 6,
+      "unmatched_gateway_count": 8,
+      "unmatched_bank_count": 8,
+      "sample_match_ids": [
+        "match_exact_rzp_pay_EXACT_0018_5010_bnk_UTR_EX_0018_48",
+        "match_exact_rzp_pay_DELAY_0010_8956_bnk_UTR_DELAY_0010_28",
+        "match_exact_rzp_pay_DELAY_0012_3697_bnk_UTR_DELAY_0012_49",
+        "match_exact_rzp_pay_DELAY_0014_8454_bnk_UTR_DELAY_0014_90",
+        "match_exact_rzp_pay_DELAY_0009_4872_bnk_UTR_DELAY_0009_61",
+        "match_exact_rzp_pay_EXACT_0024_9830_bnk_UTR_EX_0024_86",
+        "match_exact_rzp_pay_DELAY_0001_2790_bnk_UTR_DELAY_0001_69",
+        "match_exact_rzp_pay_EXACT_0007_7924_bnk_UTR_EX_0007_27",
+        "match_exact_rzp_pay_DELAY_0011_7570_bnk_UTR_DELAY_0011_6",
+        "match_exact_rzp_pay_EXACT_0012_6925_bnk_UTR_EX_0012_1"
+      ]
+    },
+    "operator": "FIN_CONTROLLER_ENGINE_V1"
+  },
+  {
+    "index": 5,
+    "timestamp": "2026-08-22T19:00:10.214676+00:00",
+    "previous_hash": "0e525a108a81e848dfe21d6abb663c0d19b2729e35c6805650293f1fe1d04aca",
+    "block_hash": "604dcdb4e88253412b8793a196bb4e38dd997b90e42d846ab36701bf2ff63eed",
+    "event_type": "RECONCILIATION_RUN_COMPLETED",
+    "payload_hash": "2b8cbdd06f3f35774c3f413e9806d930b89fd5801394a8f58428097a1b3819fa",
+    "payload": {
+      "session_id": "benchmark_1787405409",
+      "summary": {
+        "total_gateway_tx": 117,
+        "total_bank_tx": 100,
+        "auto_matched_count": 86,
+        "human_review_count": 6,
+        "unmatched_gateway_count": 8,
+        "unmatched_bank_count": 8,
+        "total_gateway_volume": 1270349.0,
+        "total_bank_volume": 1526533.43,
+        "reconciled_volume": 1180116.2,
+        "unmatched_gateway_volume": 78244.8,
+        "unmatched_bank_volume": 340427.73,
+        "total_fee_volume": 13308.67,
+        "auto_match_rate": 93.16,
+        "execution_time_ms": 611.7
+      },
+      "auto_matched_count": 86,
+      "human_review_count": 6,
+      "unmatched_gateway_count": 8,
+      "unmatched_bank_count": 8,
+      "sample_match_ids": [
+        "match_exact_rzp_pay_EXACT_0018_5010_bnk_UTR_EX_0018_48",
+        "match_exact_rzp_pay_DELAY_0010_8956_bnk_UTR_DELAY_0010_28",
+        "match_exact_rzp_pay_DELAY_0012_3697_bnk_UTR_DELAY_0012_49",
+        "match_exact_rzp_pay_DELAY_0014_8454_bnk_UTR_DELAY_0014_90",
+        "match_exact_rzp_pay_DELAY_0009_4872_bnk_UTR_DELAY_0009_61",
+        "match_exact_rzp_pay_EXACT_0024_9830_bnk_UTR_EX_0024_86",
+        "match_exact_rzp_pay_DELAY_0001_2790_bnk_UTR_DELAY_0001_69",
+        "match_exact_rzp_pay_EXACT_0007_7924_bnk_UTR_EX_0007_27",
+        "match_exact_rzp_pay_DELAY_0011_7570_bnk_UTR_DELAY_0011_6",
+        "match_exact_rzp_pay_EXACT_0012_6925_bnk_UTR_EX_0012_1"
+      ]
+    },
+    "operator": "FIN_CONTROLLER_ENGINE_V1"
+  }
+]
