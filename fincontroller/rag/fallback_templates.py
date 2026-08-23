@@ -32,8 +32,81 @@ class DeterministicFallbackEngine:
 
         query = tx_id_or_ref.strip().lower()
 
+        # =====================================================================
+        # INTENT 1: UNMATCHED BANK EXPOSURE / RESIDUALS
+        # =====================================================================
+        if any(w in query for w in ["unmatched bank", "bank exposure", "exposure", "orphaned bank", "unclaimed"]):
+            total_unmatched_bnk_vol = sum(b.net_amount for b in report.unmatched_bank)
+            sample_ids = [b.id for b in report.unmatched_bank[:4]]
+            return (
+                f"### 🏦 Total Unmatched Bank Exposure Summary\n\n"
+                f"- **Total Unmatched Bank Records**: **{len(report.unmatched_bank)} transactions**\n"
+                f"- **Total Outstanding Exposure Volume**: **₹{total_unmatched_bnk_vol:,.2f}**\n"
+                f"- **Sample Unmatched Credits**: {', '.join(f'`{sid}`' for sid in sample_ids)}\n\n"
+                f"**Financial Controller Diagnosis**:\n"
+                f"These entries represent direct deposits (e.g. client NEFT/RTGS transfers or non-gateway credits) that entered the bank account without a corresponding Razorpay settlement entry. "
+                f"They require manual General Ledger allocation or bank statement reclassification."
+            )
+
+        # =====================================================================
+        # INTENT 2: FEE DEDUCTION LOGIC & MDR/GST BREAKDOWN
+        # =====================================================================
+        if any(w in query for w in ["fee deduction", "gateway fees", "mdr", "gst", "fee calculated", "fee logic"]):
+            total_fee_vol = report.summary.total_fee_volume
+            fee_matches = [m for m in report.matches if m.fee_detected > 0]
+            return (
+                f"### 🧾 Gateway Fee & Tax Deduction Architecture\n\n"
+                f"- **Total Accounted Fee Volume**: **₹{total_fee_vol:,.2f}** across {len(fee_matches)} fee-adjusted settlements.\n"
+                f"- **Standard MDR Rate**: 2.00% on transaction gross volume.\n"
+                f"- **Applicable Tax**: 18.00% GST levied on the MDR fee amount.\n"
+                f"- **Mathematical Invariant**: `Net Bank Deposit = Gross Amount - (MDR Fee + GST)`\n\n"
+                f"**Reconciliation Example**:\n"
+                f"For a ₹10,000 gross transaction:\n"
+                f"- MDR Fee (2%): ₹200.00\n"
+                f"- GST (18% of fee): ₹36.00\n"
+                f"- Total Deduction: ₹236.00 ➔ Expected Net Bank Credit: **₹9,764.00**."
+            )
+
+        # =====================================================================
+        # INTENT 3: ROUNDING DISCREPANCY & TOLERANCE WINDOW
+        # =====================================================================
+        if any(w in query for w in ["rounding", "tolerance", "discrepancy on rounding", "paise"]):
+            tol_matches = [m for m in report.matches if "tolerance" in m.match_id.lower() or "round" in m.match_id.lower()]
+            return (
+                f"### ⚖️ Amount & Date Rounding Tolerance Policy\n\n"
+                f"- **Paise Rounding Limit**: **≤ ₹1.00** absolute difference accepted.\n"
+                f"- **Settlement Drift Window**: Up to **3 days (72 hours)** allowed for weekend/bank holiday clearing.\n"
+                f"- **Total Rounding Matches Handled**: **{len(tol_matches)} cases**\n\n"
+                f"**Operational Guardrail**:\n"
+                f"When reference IDs match exactly and net amount difference is within ₹1.00 (e.g. ₹0.45 paise truncation from banking IMPS/NEFT gateways), "
+                f"the engine auto-reconciles with confidence 0.88 and notes the exact discrepancy."
+            )
+
+        # =====================================================================
+        # INTENT 4: AMBIGUOUS DUPLICATE & CONFLICT FILTERING
+        # =====================================================================
+        if any(w in query for w in ["ambiguous", "duplicate", "conflict", "human review", "why human review"]) and not any(t in query for t in ["pay_", "utr_", "bnk_"]):
+            return (
+                f"### ⚠️ Ambiguous Duplicate Conflict Policy (Needs Human Review)\n\n"
+                f"- **Total Flagged Cases**: **{len(report.human_reviews)} review cases** ({report.summary.human_review_count} records)\n"
+                f"- **Deterministic Rule**: When two or more Gateway records (e.g. `pay_AMBIG_DUP_00_A` and `pay_AMBIG_DUP_00_B`) share identical amounts and reference tokens competing for a single bank credit, "
+                f"the engine **refuses greedy auto-matching**.\n"
+                f"- **Justification**: Auto-linking in the presence of candidate ambiguity introduces cascading financial false positives. The engine halts and flags for controller sign-off."
+            )
+
+        # =====================================================================
+        # INTENT 5: SPLIT BATCH SETTLEMENTS
+        # =====================================================================
+        if any(w in query for w in ["split batch", "split settlement", "1:n", "subset sum"]) and not any(t in query for t in ["pay_", "utr_batch_"]):
+            return (
+                f"### 📦 1-to-N Split & Batch Settlement Solver\n\n"
+                f"- **Mechanism 1 (Reference Grouping)**: Aggregates multiple Razorpay payment records that carry the same batch payout UTR tag in their metadata.\n"
+                f"- **Mechanism 2 (Combinatorial Subset Sum)**: Solves `Sum(Gateway[i]) == Bank.Credit` within a 3-day date window without stochastic guessing.\n"
+                f"- **Audit Proof**: Every resolved batch is cryptographically linked with all member transaction IDs into the SHA-256 audit ledger."
+            )
+
         # Extract potential specific token identifiers from conversational sentences
-        extracted_tokens = re.findall(r"(?:pay_|setl_|rfnd_|bnk_|rzp_|utr_)[a-zA-Z0-9_-]+", query, re.IGNORECASE)
+        extracted_tokens = re.findall(r"(?:pay_|setl_|rfnd_|bnk_|rzp_|utr_|match_)[a-zA-Z0-9_-]+", query, re.IGNORECASE)
         candidate_terms = [query] + [t.lower() for t in extracted_tokens]
 
         # Check in Auto Matches

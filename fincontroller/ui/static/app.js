@@ -260,8 +260,10 @@ async function sendChatMessage() {
     });
     const data = await res.json();
     botMsgElem.querySelector('.message-body').innerHTML = renderMarkdown(data.answer);
+    document.getElementById('chatMessages').scrollTop = document.getElementById('chatMessages').scrollHeight;
   } catch (err) {
     botMsgElem.querySelector('.message-body').innerHTML = `<p class="text-danger">Failed to connect to agent: ${err.message}</p>`;
+    document.getElementById('chatMessages').scrollTop = document.getElementById('chatMessages').scrollHeight;
   }
 }
 
