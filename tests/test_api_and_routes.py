@@ -92,6 +92,20 @@ def test_telemetry_endpoint():
     assert isinstance(data["events"], list)
 
 
+def test_clear_telemetry_endpoint():
+    # Push an event first
+    client.post("/api/simulate-failure", json={"scenario": "upstream_timeout"})
+    # Clear via POST
+    res_post = client.post("/api/telemetry/clear")
+    assert res_post.status_code == 200
+    assert res_post.json()["status"] == "cleared"
+    assert res_post.json()["total_events"] == 0
+
+    # Verify telemetry is empty
+    telemetry_resp = client.get("/api/telemetry")
+    assert len(telemetry_resp.json()["events"]) == 0
+
+
 def test_simulate_failures_endpoints():
     # 1. Upstream timeout
     r1 = client.post("/api/simulate-failure", json={"scenario": "upstream_timeout"})

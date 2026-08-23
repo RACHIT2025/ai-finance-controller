@@ -67,8 +67,17 @@ function initEventListeners() {
   document.getElementById('btnSimulateTimeout').addEventListener('click', () => simulateFault('upstream_timeout'));
   document.getElementById('btnSimulateLLMOutage').addEventListener('click', () => simulateFault('llm_offline'));
   document.getElementById('btnSimulateTamper').addEventListener('click', () => simulateFault('audit_tamper'));
-  document.getElementById('btnClearTelemetry').addEventListener('click', () => {
-    document.getElementById('telemetryLogBody').innerHTML = '';
+  document.getElementById('btnClearTelemetry').addEventListener('click', async () => {
+    try {
+      await fetch('/api/telemetry/clear', { method: 'POST' });
+      document.getElementById('telemetryLogBody').innerHTML = `
+        <div class="log-entry" style="color: var(--text-muted); font-style: italic; opacity: 0.7;">
+          [Telemetry buffer cleared. New resilience & recovery events will stream here.]
+        </div>
+      `;
+    } catch (err) {
+      document.getElementById('telemetryLogBody').innerHTML = '';
+    }
   });
 }
 
@@ -397,7 +406,14 @@ async function fetchTelemetry() {
     const res = await fetch('/api/telemetry');
     const data = await res.json();
     const body = document.getElementById('telemetryLogBody');
-    if (!data.events || data.events.length === 0) return;
+    if (!data.events || data.events.length === 0) {
+      body.innerHTML = `
+        <div class="log-entry" style="color: var(--text-muted); font-style: italic; opacity: 0.7;">
+          [No telemetry events in buffer. Run reconciliation or simulate faults above.]
+        </div>
+      `;
+      return;
+    }
 
     body.innerHTML = data.events.map(e => `
       <div class="log-entry">

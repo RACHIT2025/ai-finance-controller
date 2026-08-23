@@ -156,6 +156,14 @@ async def get_telemetry_logs():
     return {"events": telemetry.get_recent(100)}
 
 
+@router.post("/telemetry/clear")
+@router.delete("/telemetry")
+async def clear_telemetry_logs():
+    """Clear all events from the real-time telemetry buffer."""
+    telemetry.clear()
+    return {"status": "cleared", "total_events": 0}
+
+
 @router.post("/simulate-failure")
 async def simulate_failure(req: FailureSimulationRequest):
     """Visually instrument and demonstrate runtime resilience and graceful fallback."""
