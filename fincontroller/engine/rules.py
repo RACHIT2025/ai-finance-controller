@@ -50,6 +50,18 @@ class MatchingRules:
         if raw1 == ref2 or raw2 == ref1 or raw1 == raw2:
             return True
 
+        desc1 = (tx1.description or "").strip().upper()
+        desc2 = (tx2.description or "").strip().upper()
+
+        if len(ref1) >= 6 and (ref1 in desc2 or ref1 in raw2):
+            return True
+        if len(ref2) >= 6 and (ref2 in desc1 or ref2 in raw1):
+            return True
+        if len(raw1) >= 6 and (raw1 in desc2 or raw1 in ref2):
+            return True
+        if len(raw2) >= 6 and (raw2 in desc1 or raw2 in ref1):
+            return True
+
         return False
 
     @staticmethod

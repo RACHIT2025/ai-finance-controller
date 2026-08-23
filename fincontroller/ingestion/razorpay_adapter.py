@@ -6,24 +6,34 @@ Supports Razorpay Settlement CSV exports and simulated JSON API responses.
 from datetime import datetime
 import io
 import json
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 import pandas as pd
 from fincontroller.core.exceptions import IngestionError
 from fincontroller.core.models import NormalizedTransaction, TransactionSource, TransactionStatus
 from fincontroller.ingestion.base import BaseIngestionAdapter
 
 
-class RazorpayAdapter(BaseIngestionAdapter):
-    """Parses Razorpay settlement reports and payment objects."""
+from fincontroller.ingestion.mapper import ColumnMapper, ColumnMappingConfig
 
-    def parse(self, data: bytes | str | pd.DataFrame | List[Dict[str, Any]]) -> List[NormalizedTransaction]:
+
+class RazorpayAdapter(BaseIngestionAdapter):
+    """Parses Razorpay settlement reports and payment objects with schema auto-detection."""
+
+    def __init__(self, mapping: Optional[ColumnMappingConfig | Dict[str, str]] = None):
+        self.mapping = mapping
+
+    def parse(
+        self,
+        data: bytes | str | pd.DataFrame | List[Dict[str, Any]],
+        mapping_override: Optional[ColumnMappingConfig | Dict[str, str]] = None,
+    ) -> List[NormalizedTransaction]:
         try:
             if isinstance(data, list):
-                return self._parse_json_items(data)
+                return self._parse_json_items(data, mapping_override)
             elif isinstance(data, str) and data.strip().startswith(("[", "{")):
                 loaded = json.loads(data)
                 items = loaded.get("items", loaded) if isinstance(loaded, dict) else loaded
-                return self._parse_json_items(items)
+                return self._parse_json_items(items, mapping_override)
             elif isinstance(data, pd.DataFrame):
                 df = data
             elif isinstance(data, bytes):
@@ -31,11 +41,27 @@ class RazorpayAdapter(BaseIngestionAdapter):
             else:
                 df = pd.read_csv(io.StringIO(str(data)))
 
-            return self._parse_dataframe(df)
+            return self._parse_dataframe(df, mapping_override)
+        except IngestionError:
+            raise
         except Exception as e:
             raise IngestionError(f"Failed to parse Razorpay data: {str(e)}") from e
 
-    def _parse_dataframe(self, df: pd.DataFrame) -> List[NormalizedTransaction]:
+    def _parse_dataframe(
+        self,
+        df: pd.DataFrame,
+        mapping_override: Optional[ColumnMappingConfig | Dict[str, str]] = None,
+    ) -> List[NormalizedTransaction]:
+        normalized: List[NormalizedTransaction] = []
+        active_map = mapping_override or self.mapping
+
+        # If custom mapping or non-standard columns, use SchemaAgnosticAdapter
+        standard_cols = {"entity_id", "payment_id", "amount", "settled_at", "utr"}
+        clean_cols = {c.strip().lower().replace(" ", "_").replace("/", "_") for c in df.columns}
+        if active_map or not any(sc in clean_cols for sc in standard_cols):
+            from fincontroller.ingestion.generic_adapter import SchemaAgnosticAdapter
+            adapter = SchemaAgnosticAdapter(source=TransactionSource.RAZORPAY, mapping=active_map, source_prefix="rzp")
+            return adapter.parse(df)
         normalized: List[NormalizedTransaction] = []
         df.columns = [c.strip().lower().replace(" ", "_").replace("/", "_") for c in df.columns]
 

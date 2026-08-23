@@ -5,17 +5,27 @@ Supports multi-bank statement formats with credit/debit columns and narration UT
 
 from datetime import datetime
 import io
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 import pandas as pd
 from fincontroller.core.exceptions import IngestionError
 from fincontroller.core.models import NormalizedTransaction, TransactionSource, TransactionStatus
 from fincontroller.ingestion.base import BaseIngestionAdapter
 
 
-class BankLedgerAdapter(BaseIngestionAdapter):
-    """Parses Bank statement exports and ledger transaction feeds."""
+from fincontroller.ingestion.mapper import ColumnMapper, ColumnMappingConfig
 
-    def parse(self, data: bytes | str | pd.DataFrame | List[Dict[str, Any]]) -> List[NormalizedTransaction]:
+
+class BankLedgerAdapter(BaseIngestionAdapter):
+    """Parses Bank statement exports and ledger transaction feeds with schema auto-detection."""
+
+    def __init__(self, mapping: Optional[ColumnMappingConfig | Dict[str, str]] = None):
+        self.mapping = mapping
+
+    def parse(
+        self,
+        data: bytes | str | pd.DataFrame | List[Dict[str, Any]],
+        mapping_override: Optional[ColumnMappingConfig | Dict[str, str]] = None,
+    ) -> List[NormalizedTransaction]:
         try:
             if isinstance(data, list):
                 df = pd.DataFrame(data)
@@ -26,11 +36,27 @@ class BankLedgerAdapter(BaseIngestionAdapter):
             else:
                 df = pd.read_csv(io.StringIO(str(data)))
 
-            return self._parse_dataframe(df)
+            return self._parse_dataframe(df, mapping_override)
+        except IngestionError:
+            raise
         except Exception as e:
             raise IngestionError(f"Failed to parse Bank Ledger data: {str(e)}") from e
 
-    def _parse_dataframe(self, df: pd.DataFrame) -> List[NormalizedTransaction]:
+    def _parse_dataframe(
+        self,
+        df: pd.DataFrame,
+        mapping_override: Optional[ColumnMappingConfig | Dict[str, str]] = None,
+    ) -> List[NormalizedTransaction]:
+        active_map = mapping_override or self.mapping
+
+        # If custom mapping or non-standard columns, use SchemaAgnosticAdapter
+        standard_cols = {"narration", "ref_no", "credit", "debit", "transaction_date", "value_date"}
+        clean_cols = {c.strip().lower().replace(" ", "_").replace("/", "_").replace(".", "") for c in df.columns}
+        if active_map or not any(sc in clean_cols for sc in standard_cols):
+            from fincontroller.ingestion.generic_adapter import SchemaAgnosticAdapter
+            adapter = SchemaAgnosticAdapter(source=TransactionSource.BANK_LEDGER, mapping=active_map, source_prefix="bnk")
+            return adapter.parse(df)
+
         normalized: List[NormalizedTransaction] = []
         df.columns = [c.strip().lower().replace(" ", "_").replace("/", "_").replace(".", "") for c in df.columns]
 

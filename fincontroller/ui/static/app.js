@@ -79,6 +79,97 @@ function initEventListeners() {
       document.getElementById('telemetryLogBody').innerHTML = '';
     }
   });
+
+  // Dynamic file upload modal handlers
+  const modalUpload = document.getElementById('modalUpload');
+  const btnOpenUpload = document.getElementById('btnOpenUploadModal');
+  const btnCloseUpload = document.getElementById('btnCloseUploadModal');
+  const btnCancelUpload = document.getElementById('btnCancelUpload');
+  const formUpload = document.getElementById('formUploadReconcile');
+
+  if (btnOpenUpload) {
+    btnOpenUpload.addEventListener('click', () => {
+      modalUpload.classList.remove('hidden');
+      document.getElementById('uploadStatusMsg').classList.add('hidden');
+    });
+  }
+  if (btnCloseUpload) {
+    btnCloseUpload.addEventListener('click', () => modalUpload.classList.add('hidden'));
+  }
+  if (btnCancelUpload) {
+    btnCancelUpload.addEventListener('click', () => modalUpload.classList.add('hidden'));
+  }
+  if (formUpload) {
+    formUpload.addEventListener('submit', handleCustomFileUpload);
+  }
+}
+
+// DYNAMIC FILE UPLOAD HANDLER
+async function handleCustomFileUpload(e) {
+  e.preventDefault();
+  const gwFile = document.getElementById('uploadGwFile').files[0];
+  const bnkFile = document.getElementById('uploadBnkFile').files[0];
+  const gwMapping = document.getElementById('uploadGwMapping').value.trim();
+  const bnkMapping = document.getElementById('uploadBnkMapping').value.trim();
+  const statusMsg = document.getElementById('uploadStatusMsg');
+  const submitBtn = document.getElementById('btnSubmitUpload');
+
+  if (!gwFile || !bnkFile) {
+    statusMsg.className = 'upload-status-msg error';
+    statusMsg.innerText = 'Please select both a Gateway file and a Bank Statement file.';
+    statusMsg.classList.remove('hidden');
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append('gateway_file', gwFile);
+  formData.append('bank_file', bnkFile);
+  if (gwMapping) formData.append('gateway_mapping', gwMapping);
+  if (bnkMapping) formData.append('bank_mapping', bnkMapping);
+
+  submitBtn.disabled = true;
+  submitBtn.innerText = 'Reconciling Live Data...';
+  statusMsg.classList.add('hidden');
+
+  try {
+    const res = await fetch('/api/reconcile/upload', {
+      method: 'POST',
+      body: formData,
+    });
+    if (!res.ok) {
+      const errData = await res.json();
+      throw new Error(errData.detail || 'Ingestion error');
+    }
+    const data = await res.json();
+    currentReport = data;
+    updateKPIs(data.summary, data.audit_block_count, data.audit_chain_head);
+    processTableData(data);
+    renderTable();
+    loadAuditChain();
+    loadSummary();
+
+    statusMsg.className = 'upload-status-msg success';
+    statusMsg.innerText = `Reconciliation Complete! Match Rate: ${data.summary.match_rate ? data.summary.match_rate.toFixed(1) : data.summary.auto_match_rate.toFixed(1)}%.`;
+    statusMsg.classList.remove('hidden');
+
+    setTimeout(() => {
+      document.getElementById('modalUpload').classList.add('hidden');
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = `
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        Reconcile Live Data
+      `;
+    }, 1200);
+  } catch (err) {
+    statusMsg.className = 'upload-status-msg error';
+    statusMsg.innerText = `Error: ${err.message}`;
+    statusMsg.classList.remove('hidden');
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = `
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      Reconcile Live Data
+    `;
+  }
 }
 
 // 3. RECONCILIATION RUNNER

@@ -141,6 +141,48 @@ Rather than cherry-picking clean matches, FinController includes a realistic, pr
 - **F1 Score**: **100.0**
 - **Honest Refusal Rate**: **100.0%** (Refused auto-matching on all 6 ambiguous duplicate collisions and routed them to human review)
 
+---
+
+## 🌐 Works With Your Own Data (Dynamic Ingestion Engine)
+
+While our fixed 50+ synthetic benchmark serves as the official reproducible ground truth, FinController is built with a **schema-agnostic ingestion engine** that ingests arbitrary user-supplied transaction datasets at runtime without code modifications.
+
+### 1. Dynamic Column Auto-Detection & Alias Resolution
+The `ColumnMapper` automatically scans and maps column variations across global payment providers and banks:
+- **Amounts**: `amount`, `Amount`, `gross_amount`, `Deposit Amt.`, `Gross_Value`, `total`, `value`
+- **Fees & Taxes**: `fee`, `Fee`, `mdr`, `PayPal_Fee`, `tax`, `gst`, `vat`
+- **Reference & UTRs**: `reference_id`, `utr`, `Chq/Ref Number`, `Custom_Ref`, `transaction_id`, `arn`, `entity_id`
+- **Timestamps**: ISO (`2026-08-01 14:30`), Indian/European (`01/08/2026`), US (`08/01/2026`), Epoch timestamps
+- **Split Credit / Debit Columns**: Auto-computes net deposits and refund debits from bank statement tables.
+
+### 2. Live Ingestion via CLI
+Run reconciliation on any external files (e.g. Stripe exports and HDFC bank statements):
+```bash
+# Reconcile arbitrary files with automatic column detection
+python -m fincontroller reconcile data/sample_stripe_export.csv data/sample_hdfc_bank_statement.csv
+
+# Reconcile with explicit custom JSON column mapping override
+python -m fincontroller reconcile my_gateway.csv my_bank.csv \
+  --gw-map '{"amount": "gross_val", "reference_id": "cust_ref"}' \
+  --bnk-map '{"amount": "deposit_amt", "reference_id": "chq_no"}'
+```
+
+### 3. Live Ingestion via Web Dashboard Upload
+1. Click **Upload Custom Files** in the web dashboard navbar (`http://localhost:8000`).
+2. Drop your Gateway file (`.csv`/`.json`) and Bank statement (`.csv`).
+3. (Optional) Provide JSON schema mapping overrides.
+4. Click **Reconcile Live Data** — the dashboard immediately updates the KPI cards, exceptions queue, and SHA-256 audit chain.
+
+### 4. Live Ingestion via REST API
+```bash
+curl -X POST http://localhost:8000/api/reconcile/upload \
+  -F "gateway_file=@data/sample_stripe_export.csv" \
+  -F "bank_file=@data/sample_hdfc_bank_statement.csv"
+```
+*Both the fixed benchmark and live dynamic ingestion share the exact same underlying `DeterministicMatchingEngine`.*
+
+---
+
 ### 📋 Full Unresolved Exceptions Breakdown (Honest Reporting)
 
 FinController does not conceal unresolved items behind an aggregate success count. Every run outputs an explicit, actionable exception queue:
@@ -216,12 +258,15 @@ pytest tests/ -v
 
 ### 5-Minute Pitch Structure
 - **0:00–0:10 (Problem Taste)**: The financial stakes of manual reconciliation. Razorpay's framing: *"verification capacity, not generation speed, is the bottleneck."*
-- **0:10–1:40 (Build Quality & AI Judgment)**: Architectural walkthrough. Explain why numeric matching is 100% deterministic and why the LLM is strictly isolated to natural language Q&A and summary generation.
-- **1:40–3:40 (Live Demo & Failure Recovery)**:
-  - Demo auto-matching of 1-to-N split settlements and fee deductions.
+- **0:10–1:30 (Build Quality & AI Judgment)**: Architectural walkthrough. Explain why numeric matching is 100% deterministic and why the LLM is strictly isolated to natural language Q&A and summary generation.
+- **1:30–3:00 (Live Fixed Benchmark & Failure Recovery)**:
+  - Demo auto-matching of 1-to-N split settlements and fee deductions on the official seeded benchmark.
   - Demo an ambiguous duplicate case where the engine **honestly refuses to match** and routes to human review.
-  - Demo simulated upstream timeout and graceful LLM fallback in the telemetry console.
-- **3:40–4:40 (Honest Accuracy Report)**: Present the 108-case messy benchmark suite with precision, recall, and false-positive refusal rates.
+  - Demo simulated upstream timeout and graceful LLM fallback in the live telemetry console.
+- **3:00–4:00 (Live Dynamic Ingestion with External Data)**:
+  - Perform a live run on external, un-rehearsed Stripe and HDFC CSV files using the **Schema-Agnostic Ingestion Engine**.
+  - Show instantaneous column auto-detection and reconciliation without code changes.
+- **4:00–4:40 (Honest Accuracy Report)**: Present the 108-case messy benchmark suite with precision, recall, and false-positive refusal rates.
 - **4:40–5:00 (Audit Trail & Future Vision)**: Run `verify-audit` proving cryptographic SHA-256 immutability.
 
 ### Panel Interview Defense FAQ

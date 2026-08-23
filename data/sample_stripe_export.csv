@@ -1,0 +1,6 @@
+id,Amount,Fee,Converted Amount,Created (UTC),Description,Customer Email,Status
+ch_3N1abc001,4500.00,90.00,4410.00,2026-08-01 10:15:00,SaaS Pro Subscription (pay_STRIPE_001),john.doe@example.com,paid
+ch_3N1abc002,12500.00,250.00,12250.00,2026-08-01 11:30:00,Enterprise Plan (pay_STRIPE_002),finance@acme.corp,paid
+ch_3N1abc003,780.00,15.60,764.40,2026-08-01 14:00:00,Monthly Addon (pay_STRIPE_003),user3@domain.com,paid
+ch_3N1abc004,25000.00,500.00,24500.00,2026-08-02 09:00:00,Custom Integration (pay_STRIPE_004),billing@tech.io,paid
+ch_3N1abc005,3200.00,64.00,3136.00,2026-08-02 16:45:00,API Usage Tier 2 (pay_STRIPE_005),dev@startup.ai,paid

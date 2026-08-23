@@ -29,30 +29,31 @@ class BaseIngestionAdapter(ABC):
 
         text = str(text).strip()
 
-        # Razorpay Payment IDs: pay_XXXXXXXXXXXXXX
-        match = re.search(r"\b(pay_[a-zA-Z0-9]{10,20})\b", text)
-        if match:
-            return match.group(1)
+        # Specific prefix tokens (Razorpay, Stripe, PayPal, UTR, etc.)
+        for pattern in [
+            r"\b(pay_[a-zA-Z0-9_-]{3,35})\b",
+            r"\b(setl_[a-zA-Z0-9_-]{3,35})\b",
+            r"\b(rfnd_[a-zA-Z0-9_-]{3,35})\b",
+            r"\b(ch_[a-zA-Z0-9_-]{10,35})\b",
+            r"\b(pi_[a-zA-Z0-9_-]{10,35})\b",
+            r"(?:^|[\s/-])(UTR_?[a-zA-Z0-9]{6,30})(?:$|[\s/-])",
+            r"\b(PP_TXN_[a-zA-Z0-9_-]{3,30})\b",
+            r"\b(txn_[a-zA-Z0-9_-]{3,35})\b",
+        ]:
+            match = re.search(pattern, text, re.IGNORECASE)
+            if match:
+                return match.group(1)
 
-        # Razorpay Settlement IDs: setl_XXXXXXXXXXXXXX
-        match = re.search(r"\b(setl_[a-zA-Z0-9]{10,20})\b", text)
-        if match:
-            return match.group(1)
-
-        # Razorpay Refund IDs: rfnd_XXXXXXXXXXXXXX
-        match = re.search(r"\b(rfnd_[a-zA-Z0-9]{10,20})\b", text)
-        if match:
-            return match.group(1)
-
-        # Standard Indian Banking UTR / RRN (12-22 alphanumeric)
-        # e.g., CMS/348291048291/RZP, NEFT-HDFC000123-348291048291
+        # Standard Indian Banking UTR / RRN (12-22 alphanumeric without special chars)
         match = re.search(r"\b([A-Z0-9]{12,22})\b", text)
-        if match:
+        if match and sum(1 for c in match.group(1) if c.isdigit()) >= 3:
             return match.group(1)
 
-        # Order or general alphanumeric tokens
-        match = re.search(r"\b([A-Za-z0-9_-]{6,30})\b", text)
-        if match:
-            return match.group(1)
+        # Alphanumeric tokens with mixed letters & digits (e.g. UTR_EX_0001, CMS348291048291)
+        for token in re.split(r"[\s/]+", text):
+            token = token.strip(" -:,.")
+            digit_count = sum(1 for c in token if c.isdigit())
+            if digit_count >= 3 and 8 <= len(token) <= 30:
+                return token
 
         return text

@@ -33,9 +33,13 @@
           <span class="status-dot green"></span>
           <span id="auditPillText">Audit Chain: Verified (SHA-256)</span>
         </div>
+        <button id="btnOpenUploadModal" class="btn btn-secondary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+          Upload Custom Files
+        </button>
         <button id="btnRunReconcile" class="btn btn-primary">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
-          Run Reconciliation
+          Run Benchmark (Seeded 50+)
         </button>
       </div>
     </header>
@@ -271,6 +275,66 @@
         <span>SHA-256 Hash Chain</span>
       </div>
     </footer>
+  </div>
+
+  <!-- DYNAMIC CSV UPLOAD MODAL -->
+  <div id="modalUpload" class="modal-overlay hidden">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title">
+          <span class="modal-icon">📤</span>
+          <h3>Reconcile Your Own Transaction Files</h3>
+        </div>
+        <button id="btnCloseUploadModal" class="btn-close">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <p class="modal-description">
+          Upload any payment gateway export (Razorpay, Stripe, PayPal, etc.) and bank ledger (HDFC, ICICI, SBI). 
+          Our <strong>Schema-Agnostic Ingestion Engine</strong> auto-detects columns and date formats automatically.
+        </p>
+
+        <form id="formUploadReconcile" class="upload-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="uploadGwFile">1. Payment Gateway File (CSV / JSON)</label>
+              <input type="file" id="uploadGwFile" accept=".csv,.json" required />
+              <span class="input-hint">e.g., Stripe, PayPal, Razorpay exports</span>
+            </div>
+
+            <div class="form-group">
+              <label for="uploadBnkFile">2. Bank Statement / Ledger (CSV)</label>
+              <input type="file" id="uploadBnkFile" accept=".csv,.json" required />
+              <span class="input-hint">e.g., HDFC, ICICI, SBI bank feeds</span>
+            </div>
+          </div>
+
+          <details class="mapping-accordion">
+            <summary>⚙️ Optional Custom Column Mappings (JSON)</summary>
+            <div class="mapping-inputs">
+              <div class="form-group">
+                <label for="uploadGwMapping">Gateway Mapping Override:</label>
+                <textarea id="uploadGwMapping" placeholder='{"amount": "gross_value", "reference_id": "custom_ref"}' rows="2"></textarea>
+              </div>
+              <div class="form-group">
+                <label for="uploadBnkMapping">Bank Mapping Override:</label>
+                <textarea id="uploadBnkMapping" placeholder='{"amount": "deposit_amt", "description": "narration"}' rows="2"></textarea>
+              </div>
+            </div>
+          </details>
+
+          <div id="uploadStatusMsg" class="upload-status-msg hidden"></div>
+
+          <div class="modal-actions">
+            <button type="button" id="btnCancelUpload" class="btn btn-outline">Cancel</button>
+            <button type="submit" id="btnSubmitUpload" class="btn btn-primary">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+              Reconcile Live Data
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   </div>
 
   <script src="/static/app.js"></script>

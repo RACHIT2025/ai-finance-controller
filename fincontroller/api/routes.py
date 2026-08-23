@@ -67,16 +67,35 @@ async def reconcile_benchmark():
 
 @router.post("/reconcile/upload")
 async def reconcile_upload(
-    razorpay_file: UploadFile = File(...),
-    bank_file: UploadFile = File(...),
+    gateway_file: Optional[UploadFile] = File(None),
+    bank_file: Optional[UploadFile] = File(None),
+    razorpay_file: Optional[UploadFile] = File(None),
+    gateway_mapping: Optional[str] = Form(None),
+    bank_mapping: Optional[str] = Form(None),
 ):
-    """Reconcile custom uploaded Razorpay and Bank CSV files."""
+    """
+    Reconcile arbitrary user-supplied Gateway and Bank files with automatic column
+    mapping and optional custom schema overrides.
+    """
     global latest_report
+    gw_upload = gateway_file or razorpay_file
+    if not gw_upload or not bank_file:
+        raise HTTPException(status_code=400, detail="Both gateway/razorpay file and bank file are required.")
+
     try:
-        rzp_bytes = await razorpay_file.read()
+        gw_bytes = await gw_upload.read()
         bank_bytes = await bank_file.read()
 
-        gw_txs = rzp_adapter.parse(rzp_bytes)
+        gw_map = json.loads(gateway_mapping) if gateway_mapping and gateway_mapping.strip().startswith("{") else None
+        bnk_map = json.loads(bank_mapping) if bank_mapping and bank_mapping.strip().startswith("{") else None
+
+        from fincontroller.ingestion.generic_adapter import SchemaAgnosticAdapter
+        from fincontroller.core.models import TransactionSource
+
+        gw_adapter = SchemaAgnosticAdapter(source=TransactionSource.RAZORPAY, mapping=gw_map, source_prefix="gw")
+        bank_adapter = SchemaAgnosticAdapter(source=TransactionSource.BANK_LEDGER, mapping=bnk_map, source_prefix="bnk")
+
+        gw_txs = gw_adapter.parse(gw_bytes)
         bnk_txs = bank_adapter.parse(bank_bytes)
 
         engine = DeterministicMatchingEngine(session_id=f"upload_{int(datetime.now().timestamp())}")
@@ -88,8 +107,9 @@ async def reconcile_upload(
 
         telemetry.push(
             level="INFO",
-            component="RECONCILIATION_ENGINE",
-            message=f"Custom CSV reconciliation finished: {report.summary.auto_matched_count} auto-matched.",
+            component="DYNAMIC_INGESTION",
+            message=f"Live reconciliation complete: {len(gw_txs)} gateway txs vs {len(bnk_txs)} bank credits. Match Rate: {report.summary.match_rate:.1f}%.",
+            metadata={"gw_count": len(gw_txs), "bnk_count": len(bnk_txs), "matches": len(report.matches)},
         )
         return report
     except Exception as e:

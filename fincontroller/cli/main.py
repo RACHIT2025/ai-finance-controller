@@ -7,7 +7,7 @@ from datetime import datetime
 import json
 import os
 import sys
-from typing import Optional
+from typing import Any, Dict, List, Optional
 from rich.console import Console
 from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
@@ -94,32 +94,67 @@ def render_exceptions_table(report: ReconciliationReport, title: str = "Unresolv
     console.print(table)
 
 
+def _load_mapping_input(map_input: Optional[str]) -> Optional[Dict[str, str]]:
+    """Parse JSON string or JSON file path for column mapping."""
+    if not map_input:
+        return None
+    trimmed = map_input.strip()
+    if os.path.exists(trimmed):
+        with open(trimmed, "r", encoding="utf-8") as f:
+            return json.load(f)
+    if trimmed.startswith("{"):
+        return json.loads(trimmed)
+    return None
+
+
 @app.command(name="reconcile")
 def reconcile_files(
-    razorpay_csv: str = typer.Argument(..., help="Path to Razorpay settlement CSV export"),
-    bank_csv: str = typer.Argument(..., help="Path to Bank Statement / Ledger CSV file"),
+    gateway_csv: str = typer.Argument(..., help="Path to Gateway / Payment CSV or JSON export (Razorpay, Stripe, PayPal, etc.)"),
+    bank_csv: str = typer.Argument(..., help="Path to Bank Statement / Ledger CSV file (HDFC, ICICI, SBI, etc.)"),
+    gw_mapping: Optional[str] = typer.Option(None, "--gw-map", "-gm", help="Optional JSON string or file path for gateway column mapping"),
+    bnk_mapping: Optional[str] = typer.Option(None, "--bnk-map", "-bm", help="Optional JSON string or file path for bank column mapping"),
     output_json: Optional[str] = typer.Option(None, "--output", "-o", help="Optional JSON output path"),
     show_exceptions: bool = typer.Option(True, "--show-exceptions/--hide-exceptions", help="Display full table of unresolved exceptions"),
 ):
-    """Run deterministic multi-pass settlement reconciliation across two CSV sources."""
-    if not os.path.exists(razorpay_csv) or not os.path.exists(bank_csv):
-        console.print("[bold red]Error:[/bold red] One or both CSV files do not exist.")
+    """
+    Run deterministic multi-pass settlement reconciliation across arbitrary user-supplied files.
+    Auto-detects column names and schemas with optional user mapping overrides.
+    """
+    if not os.path.exists(gateway_csv):
+        console.print(f"[bold red]Error:[/bold red] Gateway file '{gateway_csv}' does not exist.")
+        raise typer.Exit(code=1)
+    if not os.path.exists(bank_csv):
+        console.print(f"[bold red]Error:[/bold red] Bank statement file '{bank_csv}' does not exist.")
         raise typer.Exit(code=1)
 
-    console.print(Panel("[bold cyan]Razorpay AI Finance Controller[/bold cyan] — Multi-Pass Reconciliation Engine", expand=False))
+    console.print(Panel("[bold cyan]Razorpay AI Finance Controller[/bold cyan] — Dynamic Multi-Pass Reconciliation", expand=False))
 
-    with console.status("[cyan]Executing multi-pass deterministic matching pipeline...[/cyan]"):
-        rzp_adapter = RazorpayAdapter()
-        bank_adapter = BankLedgerAdapter()
+    try:
+        gw_map = _load_mapping_input(gw_mapping)
+        bnk_map = _load_mapping_input(bnk_mapping)
+    except Exception as e:
+        console.print(f"[bold red]Invalid column mapping JSON:[/bold red] {str(e)}")
+        raise typer.Exit(code=1)
 
-        gw_txs = rzp_adapter.parse(open(razorpay_csv, "rb").read())
-        bnk_txs = bank_adapter.parse(open(bank_csv, "rb").read())
+    try:
+        with console.status("[cyan]Ingesting data & executing deterministic multi-pass matching...[/cyan]"):
+            from fincontroller.ingestion.generic_adapter import SchemaAgnosticAdapter
+            from fincontroller.core.models import TransactionSource
 
-        engine = DeterministicMatchingEngine(session_id=f"cli_{int(datetime.now().timestamp())}")
-        report = engine.reconcile(gw_txs, bnk_txs)
+            gw_adapter = SchemaAgnosticAdapter(source=TransactionSource.RAZORPAY, mapping=gw_map, source_prefix="gw")
+            bank_adapter = SchemaAgnosticAdapter(source=TransactionSource.BANK_LEDGER, mapping=bnk_map, source_prefix="bnk")
 
-        audit_chain = AuditHashChain()
-        block = audit_chain.record_reconciliation_report(report)
+            gw_txs = gw_adapter.parse(open(gateway_csv, "rb").read())
+            bnk_txs = bank_adapter.parse(open(bank_csv, "rb").read())
+
+            engine = DeterministicMatchingEngine(session_id=f"live_{int(datetime.now().timestamp())}")
+            report = engine.reconcile(gw_txs, bnk_txs)
+
+            audit_chain = AuditHashChain()
+            block = audit_chain.record_reconciliation_report(report)
+    except Exception as e:
+        console.print(Panel(f"[bold red]Ingestion / Reconciliation Failed:[/bold red]\n{str(e)}", title="Failure Alert", border_style="red"))
+        raise typer.Exit(code=1)
 
     # Print Summary Table
     s = report.summary
