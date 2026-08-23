@@ -129,7 +129,7 @@ class DeterministicFallbackEngine:
             f"- **Total Gateway Volume Processed**: ₹{s.total_gateway_volume:,.2f} ({s.total_gateway_tx} txs)\n"
             f"- **Total Bank Volume Received**: ₹{s.total_bank_volume:,.2f} ({s.total_bank_tx} txs)\n"
             f"- **Successfully Reconciled Volume**: ₹{s.reconciled_volume:,.2f}\n"
-            f"- **Auto-Match Accuracy Rate**: **{s.auto_match_rate:.1f}%**\n"
+            f"- **Match Rate**: **{s.match_rate:.1f}%** ({s.auto_matched_count} matched / {s.total_gateway_tx} gateway records)\n"
             f"- **Total Gateway Fees Accounted**: ₹{s.total_fee_volume:,.2f}\n"
             f"- **Reconciliation Execution Time**: {s.execution_time_ms:.1f} ms\n\n"
             f"## 2. Decision Bucketing & Classification\n"

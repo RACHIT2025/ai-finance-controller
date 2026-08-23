@@ -114,7 +114,12 @@ class ReconciliationSummary(BaseModel):
     total_fee_volume: float
     
     auto_match_rate: float
+    match_rate: Optional[float] = None
     execution_time_ms: float
+
+    def model_post_init(self, __context: Any) -> None:
+        if self.match_rate is None:
+            self.match_rate = self.auto_match_rate
 
 
 class ReconciliationReport(BaseModel):

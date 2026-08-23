@@ -395,6 +395,7 @@ class DeterministicMatchingEngine:
             unmatched_bank_volume=round(unmatched_bnk_vol, 2),
             total_fee_volume=round(total_fee_vol, 2),
             auto_match_rate=auto_rate,
+            match_rate=auto_rate,
             execution_time_ms=execution_time_ms,
         )
 

@@ -45,7 +45,7 @@ async def reconcile_benchmark():
     gw_txs = rzp_adapter.parse(df_rzp)
     bnk_txs = bank_adapter.parse(df_bank)
 
-    engine = DeterministicMatchingEngine(session_id=f"benchmark_{int(datetime.utcnow().timestamp())}")
+    engine = DeterministicMatchingEngine(session_id=f"benchmark_{int(datetime.now().timestamp())}")
     report = engine.reconcile(gw_txs, bnk_txs)
 
     # Commit report to tamper-evident audit chain
@@ -79,7 +79,7 @@ async def reconcile_upload(
         gw_txs = rzp_adapter.parse(rzp_bytes)
         bnk_txs = bank_adapter.parse(bank_bytes)
 
-        engine = DeterministicMatchingEngine(session_id=f"upload_{int(datetime.utcnow().timestamp())}")
+        engine = DeterministicMatchingEngine(session_id=f"upload_{int(datetime.now().timestamp())}")
         report = engine.reconcile(gw_txs, bnk_txs)
 
         audit_chain.record_reconciliation_report(report)

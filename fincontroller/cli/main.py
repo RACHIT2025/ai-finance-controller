@@ -18,7 +18,7 @@ import uvicorn
 from fincontroller.audit.hash_chain import AuditHashChain
 from fincontroller.audit.verifier import AuditVerifier
 from fincontroller.core.config import settings
-from fincontroller.core.models import MatchCategory
+from fincontroller.core.models import MatchCategory, MatchReasonCode, ReconciliationReport
 from fincontroller.engine.matching_engine import DeterministicMatchingEngine
 from fincontroller.ingestion.bank_ledger_adapter import BankLedgerAdapter
 from fincontroller.ingestion.generator import generate_benchmark_dataset
@@ -43,11 +43,63 @@ app = typer.Typer(
 console = Console(force_terminal=True)
 
 
+def render_exceptions_table(report: ReconciliationReport, title: str = "Unresolved Exceptions & Investigation Queue") -> None:
+    """Render a structured, formatted table of all unresolved exceptions."""
+    total_exceptions = len(report.human_reviews) + len(report.unmatched_gateway) + len(report.unmatched_bank)
+    table = Table(
+        title=f"📋 {title} (Total Unresolved: {total_exceptions})",
+        border_style="yellow",
+        header_style="bold yellow",
+    )
+    table.add_column("Type / Bucket", style="bold")
+    table.add_column("Entity ID / Reference", style="cyan")
+    table.add_column("Amount", justify="right", style="green")
+    table.add_column("Reason Code", style="magenta")
+    table.add_column("Diagnostic / Action Item", style="white")
+
+    # 1. Needs Human Review (Ambiguous Duplicates / Conflicts)
+    for hr in report.human_reviews:
+        gw_ids = ", ".join(hr.gateway_tx_ids)
+        bnk_ids = ", ".join(hr.bank_tx_ids)
+        table.add_row(
+            "[bold yellow]HUMAN_REVIEW[/bold yellow]",
+            f"GW: {gw_ids}\nBNK: {bnk_ids}",
+            "Conflicting",
+            hr.reason_code.value,
+            hr.explanation,
+        )
+
+    # 2. Unmatched Gateway Payments (Receivables / Escrow)
+    for gw in report.unmatched_gateway:
+        reason = gw.metadata.get("unmatched_reason", MatchReasonCode.UNSETTLED_GATEWAY_PAYMENT.value)
+        table.add_row(
+            "[bold red]UNMATCHED_GW[/bold red]",
+            f"{gw.id}\n(Ref: {gw.reference_id})",
+            f"₹{gw.net_amount:,.2f}",
+            str(reason),
+            f"Gross ₹{gw.amount:,.2f} status '{gw.status.value}'. No bank settlement in 3-day window (escrow / pending clearing).",
+        )
+
+    # 3. Unmatched Bank Deposits (Orphaned / Direct Transfer)
+    for bnk in report.unmatched_bank:
+        reason = bnk.metadata.get("unmatched_reason", MatchReasonCode.ORPHANED_BANK_CREDIT.value)
+        table.add_row(
+            "[bold red]UNMATCHED_BNK[/bold red]",
+            f"{bnk.id}\n(Ref: {bnk.reference_id})",
+            f"₹{bnk.net_amount:,.2f}",
+            str(reason),
+            f"Narration: {bnk.description or 'N/A'}. Direct bank credit outside gateway settlement.",
+        )
+
+    console.print(table)
+
+
 @app.command(name="reconcile")
 def reconcile_files(
     razorpay_csv: str = typer.Argument(..., help="Path to Razorpay settlement CSV export"),
     bank_csv: str = typer.Argument(..., help="Path to Bank Statement / Ledger CSV file"),
     output_json: Optional[str] = typer.Option(None, "--output", "-o", help="Optional JSON output path"),
+    show_exceptions: bool = typer.Option(True, "--show-exceptions/--hide-exceptions", help="Display full table of unresolved exceptions"),
 ):
     """Run deterministic multi-pass settlement reconciliation across two CSV sources."""
     if not os.path.exists(razorpay_csv) or not os.path.exists(bank_csv):
@@ -84,11 +136,14 @@ def reconcile_files(
     table.add_row("Total Gateway Volume", f"₹{s.total_gateway_volume:,.2f}")
     table.add_row("Reconciled Settlement Volume", f"₹{s.reconciled_volume:,.2f}")
     table.add_row("Gateway Fees Accounted", f"₹{s.total_fee_volume:,.2f}")
-    table.add_row("Auto-Match Precision Rate", f"{s.auto_match_rate:.1f}%")
+    table.add_row("Match Rate", f"[bold green]{s.match_rate:.1f}%[/bold green]")
     table.add_row("Execution Latency", f"{s.execution_time_ms:.2f} ms")
     table.add_row("Audit Block Hash", f"{block.block_hash[:24]}...")
 
     console.print(table)
+
+    if show_exceptions:
+        render_exceptions_table(report)
 
     if output_json:
         with open(output_json, "w", encoding="utf-8") as f:
@@ -99,6 +154,7 @@ def reconcile_files(
 @app.command(name="benchmark")
 def run_benchmark(
     seed: int = typer.Option(42, help="Random seed for synthetic messy dataset generator"),
+    show_exceptions: bool = typer.Option(True, "--show-exceptions/--hide-exceptions", help="Display full list of unresolved exceptions"),
 ):
     """
     Run honest accuracy benchmark over noisy, realistic edge cases (split payouts, fees, rounding, typos).
@@ -125,7 +181,6 @@ def run_benchmark(
     auto_matched_refs = set()
     for m in report.matches:
         for gid in m.gateway_tx_ids:
-            # find gw tx
             for g in gw_txs:
                 if g.id == gid:
                     auto_matched_refs.add(g.raw_id)
@@ -150,7 +205,6 @@ def run_benchmark(
             if any(r in review_refs for r in rzp_refs):
                 correct_human_reviews += 1
         elif exp_cat == "UNMATCHED":
-            # Neither in auto match nor in review
             if not any(r in auto_matched_refs for r in rzp_refs) and not any(r in review_refs for r in rzp_refs):
                 correct_unmatched += 1
 
@@ -172,12 +226,16 @@ def run_benchmark(
     console.print(eval_table)
 
     metrics_panel = (
+        f"[bold]Match Rate:[/bold] [bold green]{report.summary.match_rate:.1f}%[/bold green] ({report.summary.auto_matched_count} pairs matched from {report.summary.total_gateway_tx} gateway records)\n"
         f"[bold]Precision:[/bold] [green]100.0%[/green] (Zero false positive linkages created)\n"
         f"[bold]Recall / Coverage:[/bold] [green]{recall_pct}%[/green]\n"
         f"[bold]F1 Score:[/bold] [green]{f1_score}[/green]\n"
         f"[bold]Honest Refusal Rate:[/bold] Refused auto-matching on 100% of ambiguous duplicate conflicts."
     )
     console.print(Panel(metrics_panel, title="Accuracy Summary", border_style="cyan"))
+
+    if show_exceptions:
+        render_exceptions_table(report, title="Benchmark Unresolved Exceptions & Flagged Records")
 
 
 @app.command(name="verify-audit")
