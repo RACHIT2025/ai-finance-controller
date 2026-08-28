@@ -1,14 +1,17 @@
 # FinController: AI Finance Controller & Settlement Reconciliation Agent
 
-[![CI Pipeline](https://github.com/razorpay-ai-buildathon/fincontroller/actions/workflows/ci.yml/badge.svg)](https://github.com/razorpay-ai-buildathon/fincontroller)
-[![Python 3.10+](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13-blue.svg)](https://www.python.org/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
-[![Audit Chain](https://img.shields.io/badge/Audit%20Chain-SHA--256%20Tamper--Evident-emerald)](https://github.com/)
+[![Live Web Application](https://img.shields.io/badge/Live%20Demo-Render%20Cloud-success?style=for-the-badge&logo=render)](https://ai-finance-controller-bhi4.onrender.com/)
+[![Interactive REST API Docs](https://img.shields.io/badge/API%20Docs-Swagger%20UI-blue?style=for-the-badge&logo=fastapi)](https://ai-finance-controller-bhi4.onrender.com/docs)
+[![Audit Chain](https://img.shields.io/badge/Audit%20Chain-SHA--256%20Tamper--Evident-emerald?style=for-the-badge)](https://ai-finance-controller-bhi4.onrender.com/)
 
-> **Submission for the Razorpay AI Buildathon — AI Finance Controller Track**  
-> *"The 2026 builder consensus: verification capacity, not generation speed, is the bottleneck. Reconciliation, settlement and forecasting are still done by hand."*
+> 🚀 **Live 24/7 Web App:** [https://ai-finance-controller-bhi4.onrender.com/](https://ai-finance-controller-bhi4.onrender.com/)  
+> 📚 **Interactive Swagger Docs:** [https://ai-finance-controller-bhi4.onrender.com/docs](https://ai-finance-controller-bhi4.onrender.com/docs)  
+> 🤖 **AI Engine:** Google Gemini 2.5 Flash + Deterministic 5-Pass Precision Engine  
+> ✍️ **Customer Studio:** In-Browser Interactive Transaction Entry & CSV Export Suite  
+> **Submission for the Razorpay AI Buildathon — AI Finance Controller Track**
 
 ---
+
 
 ## 🎯 Executive Overview & Financial Significance (Problem Taste)
 
