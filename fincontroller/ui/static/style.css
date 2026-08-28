@@ -1189,9 +1189,117 @@ body {
   font-size: 0.92rem;
 }
 
+/* FINANCIAL VOLUME ALLOCATION METER */
+.allocation-meter-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 18px;
+  box-shadow: var(--shadow-card);
+}
+
+.meter-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.meter-title {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-main);
+  letter-spacing: 0.3px;
+}
+
+.meter-legend {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  flex-wrap: wrap;
+}
+
+.meter-legend strong {
+  color: var(--text-main);
+}
+
+.legend-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 4px;
+}
+
+.legend-dot.green { background-color: var(--accent-emerald); }
+.legend-dot.yellow { background-color: var(--accent-amber); }
+.legend-dot.red { background-color: var(--accent-rose); }
+.legend-dot.purple { background-color: var(--accent-purple); }
+
+.meter-bar-container {
+  height: 10px;
+  width: 100%;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 20px;
+  overflow: hidden;
+  display: flex;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.meter-segment {
+  height: 100%;
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.seg-green { background: linear-gradient(90deg, #10b981, #34d399); }
+.seg-yellow { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+.seg-red { background: linear-gradient(90deg, #f43f5e, #fb7185); }
+.seg-purple { background: linear-gradient(90deg, #818cf8, #a855f7); }
+
+/* MERKLE BLOCK INSPECTOR */
+.block-detail-drawer {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.08);
+}
+
+.merkle-box {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.merkle-label {
+  font-size: 0.72rem;
+  color: var(--accent-cyan);
+  font-weight: 600;
+}
+
+.merkle-json {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  color: #bae6fd;
+  white-space: pre-wrap;
+  word-break: break-all;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
 @media (max-width: 960px) {
   .qa-layout, .resilience-layout, .form-row, .studio-grid-layout {
     grid-template-columns: 1fr;
   }
 }
+
 

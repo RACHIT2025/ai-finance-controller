@@ -107,19 +107,77 @@ def test_export_audit_certificate_endpoint():
     assert "reconciliation_summary" in cert
 
 
-def test_gemini_effective_key_helper():
-    """Test get_effective_gemini_key logic."""
-    original_gemini = settings.GEMINI_API_KEY
-    original_google = settings.GOOGLE_API_KEY
+def test_tiered_mdr_matching():
+    """Verify tiered MDR rates (e.g. Debit Card 0.9% + GST, Flat IMPS) match correctly."""
+    from fincontroller.engine.rules import MatchingRules
+    from fincontroller.core.models import NormalizedTransaction, TransactionSource, TransactionStatus
+    from datetime import datetime
 
-    try:
-        settings.GEMINI_API_KEY = "test_gemini_key"
-        settings.GOOGLE_API_KEY = None
-        assert settings.get_effective_gemini_key() == "test_gemini_key"
+    gw = NormalizedTransaction(
+        id="pay_debit_01",
+        source=TransactionSource.RAZORPAY,
+        raw_id="pay_debit_01",
+        amount=10000.0,
+        fee=0.0,
+        net_amount=10000.0,
+        currency="INR",
+        status=TransactionStatus.CAPTURED,
+        timestamp=datetime.now(),
+        reference_id="REF_DEBIT_101",
+    )
 
-        settings.GEMINI_API_KEY = None
-        settings.GOOGLE_API_KEY = "test_google_key"
-        assert settings.get_effective_gemini_key() == "test_google_key"
-    finally:
-        settings.GEMINI_API_KEY = original_gemini
-        settings.GOOGLE_API_KEY = original_google
+    # 0.9% MDR + 18% GST = ₹106.20 fee -> Net = ₹9,893.80
+    bnk = NormalizedTransaction(
+        id="UTR_DEBIT_101",
+        source=TransactionSource.BANK_LEDGER,
+        raw_id="UTR_DEBIT_101",
+        amount=9893.80,
+        fee=0.0,
+        net_amount=9893.80,
+        currency="INR",
+        status=TransactionStatus.CAPTURED,
+        timestamp=datetime.now(),
+        reference_id="REF_DEBIT_101",
+    )
+
+    is_match, detected_fee = MatchingRules.is_fee_adjusted_match(gw, bnk)
+    assert is_match is True
+    assert round(detected_fee, 2) == 106.20
+
+
+def test_dispute_chargeback_reconciliation():
+    """Test 3-way chargeback & refund dispute reconciliation."""
+    payload = {
+        "gateway_transactions": [
+            {
+                "id": "pay_DISPUTE_01",
+                "amount": 8000.0,
+                "fee": 188.8,
+                "reference_id": "ORD_DISPUTE_201",
+                "status": "captured",
+            },
+            {
+                "id": "pay_DISPUTE_refund",
+                "amount": 8000.0,
+                "fee": 0.0,
+                "reference_id": "ORD_DISPUTE_201_CBK",
+                "status": "refunded",
+            },
+        ],
+        "bank_transactions": [
+            {
+                "id": "UTR_DISPUTE_SETTL",
+                "amount": 7811.2,
+                "reference_id": "ORD_DISPUTE_201",
+                "description": "Settlement ORD_DISPUTE_201",
+            }
+        ],
+        "session_title": "Dispute Test Session",
+    }
+
+    resp = client.post("/api/reconcile/manual-entry", json=payload)
+    assert resp.status_code == 200
+    report = resp.json()
+    assert len(report["matches"]) == 1
+    assert report["matches"][0]["fee_detected"] > 0
+

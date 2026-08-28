@@ -125,6 +125,25 @@
     <main class="tab-container">
       <!-- TAB 1: RECONCILIATION EXPLORER -->
       <section id="tab-reconciliation" class="tab-content active">
+        <!-- VISUAL VOLUME ALLOCATION METER -->
+        <div class="allocation-meter-card">
+          <div class="meter-header">
+            <span class="meter-title">📊 Financial Settlement Pipeline & Capital Allocation</span>
+            <div class="meter-legend">
+              <span class="legend-dot green"></span> <span>Reconciled: <strong id="lblAllocReconciled">₹0.00</strong></span>
+              <span class="legend-dot yellow"></span> <span>Review: <strong id="lblAllocReview">₹0.00</strong></span>
+              <span class="legend-dot red"></span> <span>Unmatched GW: <strong id="lblAllocUnmatchedGw">₹0.00</strong></span>
+              <span class="legend-dot purple"></span> <span>Unmatched Bank: <strong id="lblAllocUnmatchedBnk">₹0.00</strong></span>
+            </div>
+          </div>
+          <div class="meter-bar-container">
+            <div class="meter-segment seg-green" id="segReconciled" style="width: 0%;" title="Reconciled Volume"></div>
+            <div class="meter-segment seg-yellow" id="segReview" style="width: 0%;" title="Needs Human Review"></div>
+            <div class="meter-segment seg-red" id="segUnmatchedGw" style="width: 0%;" title="Unmatched Gateway Receivables"></div>
+            <div class="meter-segment seg-purple" id="segUnmatchedBnk" style="width: 0%;" title="Unmatched Bank Deposits"></div>
+          </div>
+        </div>
+
         <div class="section-toolbar">
           <div class="filter-group">
             <button class="filter-chip active" data-filter="ALL">All Records</button>
@@ -147,6 +166,7 @@
             <input type="text" id="tableSearchInput" placeholder="Filter by Ref ID, UTR, or Amount...">
           </div>
         </div>
+
 
         <div class="table-card">
           <div class="table-responsive">
@@ -185,9 +205,11 @@
               <span class="preset-label">Load Preset Scenarios:</span>
               <button class="btn-preset" data-preset="saas">💳 SaaS Subscriptions (MDR Fee)</button>
               <button class="btn-preset" data-preset="split">📦 E-Comm Batch Settlement</button>
+              <button class="btn-preset" data-preset="dispute">⚖️ 3-Way Chargeback & Dispute</button>
               <button class="btn-preset" data-preset="ambiguous">⚠️ Duplicate Payment Conflict</button>
               <button class="btn-preset" data-preset="clear">🗑️ Clear Grid</button>
             </div>
+
           </div>
 
           <div class="studio-grid-layout">

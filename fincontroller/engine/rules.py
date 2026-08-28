@@ -76,7 +76,8 @@ class MatchingRules:
         gateway_tx: NormalizedTransaction, bank_tx: NormalizedTransaction
     ) -> Tuple[bool, float]:
         """
-        Check if bank amount matches gateway net amount after fees and taxes.
+        Check if bank amount matches gateway net amount after fees and taxes across
+        dynamic payment method tiers (Credit Cards, Debit Cards, International, IMPS/NEFT).
         Returns (is_match, detected_fee).
         """
         # Case 1: Gateway already has explicit fee and tax calculated
@@ -84,16 +85,33 @@ class MatchingRules:
             if MatchingRules.is_amount_exact_match(gateway_tx.net_amount, bank_tx.net_amount):
                 return True, round(gateway_tx.fee + gateway_tx.tax, 2)
 
-        # Case 2: Gateway has gross amount, check standard MDR (2% + 18% GST = 2.36%)
         gross = gateway_tx.amount
-        expected_mdr = round(gross * settings.DEFAULT_MDR_PERCENT, 2)
-        expected_gst = round(expected_mdr * settings.DEFAULT_GST_ON_FEE_PERCENT, 2)
-        calculated_net = round(gross - (expected_mdr + expected_gst), 2)
+        if gross <= 0:
+            return False, 0.0
 
-        if MatchingRules.is_amount_exact_match(calculated_net, bank_tx.net_amount, tolerance=1.50):
-            return True, round(expected_mdr + expected_gst, 2)
+        # Tiered MDR profiles (MDR % + 18% GST on MDR)
+        mdr_tiers = [
+            0.02,     # Standard CC / Gateway Default (2.00% + 18% GST = 2.36%)
+            0.0199,   # Standard Merchant Tier (1.99% + 18% GST = 2.3482%)
+            0.0090,   # Domestic Debit Card (0.90% + 18% GST = 1.062%)
+            0.0299,   # International / Amex (2.99% + 18% GST = 3.5282%)
+            0.0150,   # SME Discounted Tier (1.50% + 18% GST = 1.77%)
+        ]
+
+        for mdr in mdr_tiers:
+            expected_mdr = round(gross * mdr, 2)
+            expected_gst = round(expected_mdr * settings.DEFAULT_GST_ON_FEE_PERCENT, 2)
+            calculated_net = round(gross - (expected_mdr + expected_gst), 2)
+            if MatchingRules.is_amount_exact_match(calculated_net, bank_tx.net_amount, tolerance=1.50):
+                return True, round(expected_mdr + expected_gst, 2)
+
+        # Flat IMPS / NEFT settlement fee deductions (₹5, ₹10, ₹15, ₹20)
+        for flat_fee in [5.0, 10.0, 15.0, 20.0]:
+            if MatchingRules.is_amount_exact_match(gross - flat_fee, bank_tx.net_amount, tolerance=0.50):
+                return True, flat_fee
 
         return False, 0.0
+
 
     @staticmethod
     def get_date_delta_hours(dt1: datetime, dt2: datetime) -> float:

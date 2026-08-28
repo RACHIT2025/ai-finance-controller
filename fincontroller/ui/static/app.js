@@ -193,6 +193,17 @@ function loadStudioPreset(preset) {
       { id: 'UTR_ICICI_BATCH_400', amount: 10000.0, ref: 'BATCH_GRP_400 (Items A+B+C)' },
       { id: 'UTR_DIRECT_DEPOSIT_99', amount: 750.0, ref: 'DIRECT_OFFLINE_TRANSFER' },
     ];
+  } else if (preset === 'dispute') {
+    // 3-Way Chargeback & Refund Dispute Lifecycle
+    studioGwRows = [
+      { id: 'pay_DISPUTE_orig_1', amount: 8000.0, fee: 188.8, ref: 'ORD_DISPUTE_201', status: 'captured' },
+      { id: 'pay_DISPUTE_rev_2', amount: 8000.0, fee: 0.0, ref: 'ORD_DISPUTE_201_CBK', status: 'refunded' },
+      { id: 'pay_DISPUTE_recov_3', amount: 8000.0, fee: 188.8, ref: 'ORD_DISPUTE_201_MERCHANT_WIN', status: 'captured' },
+    ];
+    studioBnkRows = [
+      { id: 'UTR_DISPUTE_SETTL_NET', amount: 7811.2, ref: 'ORD_DISPUTE_201 (Net Settlement after MDR)' },
+      { id: 'UTR_DISPUTE_PENALTY_FEE', amount: 250.0, ref: 'CHARGEBACK_DISPUTE_HANDLING_FEE' },
+    ];
   } else if (preset === 'ambiguous') {
     // 2 duplicate transactions with same amount -> Engine honestly flags for human review
     studioGwRows = [
@@ -206,6 +217,7 @@ function loadStudioPreset(preset) {
     studioGwRows = [];
     studioBnkRows = [];
   }
+
 
   renderStudioTables();
 }
@@ -453,19 +465,54 @@ async function runReconciliation() {
 // 7. KPI STATS UPDATER
 function updateKPIs(summary, auditBlocks, chainHead) {
   if (!summary) return;
-  document.getElementById('kpiReconciledVol').innerText = `₹${(summary.reconciled_volume || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
-  document.getElementById('kpiTotalVol').innerText = `Processed ₹${(summary.total_gateway_volume || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })} total`;
+  const recVol = summary.reconciled_volume || 0;
+  const totVol = summary.total_gateway_volume || 0;
+  const feeVol = summary.total_fee_volume || 0;
+  const unmatchGwVol = summary.unmatched_gateway_volume || 0;
+  const unmatchBnkVol = summary.unmatched_bank_volume || 0;
+  const reviewCount = summary.human_review_count || 0;
+
+  document.getElementById('kpiReconciledVol').innerText = `₹${recVol.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
+  document.getElementById('kpiTotalVol').innerText = `Processed ₹${totVol.toLocaleString('en-IN', { minimumFractionDigits: 2 })} total`;
 
   const rate = summary.match_rate !== undefined ? summary.match_rate : summary.auto_match_rate;
   document.getElementById('kpiAutoRate').innerText = `${(rate || 0).toFixed(1)}%`;
   document.getElementById('kpiMatchedPairs').innerText = `${summary.auto_matched_count || 0} high-confidence pairs`;
 
-  document.getElementById('kpiHumanReview').innerText = summary.human_review_count || 0;
-  document.getElementById('kpiFeesVol').innerText = `₹${(summary.total_fee_volume || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
+  document.getElementById('kpiHumanReview').innerText = reviewCount;
+  document.getElementById('kpiFeesVol').innerText = `₹${feeVol.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
 
   document.getElementById('kpiAuditBlocks').innerText = auditBlocks || 1;
   document.getElementById('kpiChainHead').innerText = chainHead ? `Hash: ${chainHead.substring(0, 12)}...` : 'Sealed & Valid';
+
+  // Financial Capital Allocation Progress Calculation
+  const totalAlloc = Math.max(1, recVol + unmatchGwVol + unmatchBnkVol + (reviewCount * 1000));
+  const pctRec = ((recVol / totalAlloc) * 100).toFixed(1);
+  const pctUnGw = ((unmatchGwVol / totalAlloc) * 100).toFixed(1);
+  const pctUnBnk = ((unmatchBnkVol / totalAlloc) * 100).toFixed(1);
+  const pctRev = Math.max(0, (100 - pctRec - pctUnGw - pctUnBnk)).toFixed(1);
+
+  const segRec = document.getElementById('segReconciled');
+  const segRev = document.getElementById('segReview');
+  const segUnGw = document.getElementById('segUnmatchedGw');
+  const segUnBnk = document.getElementById('segUnmatchedBnk');
+
+  if (segRec) segRec.style.width = `${pctRec}%`;
+  if (segRev) segRev.style.width = `${pctRev}%`;
+  if (segUnGw) segUnGw.style.width = `${pctUnGw}%`;
+  if (segUnBnk) segUnBnk.style.width = `${pctUnBnk}%`;
+
+  const lblRec = document.getElementById('lblAllocReconciled');
+  const lblRev = document.getElementById('lblAllocReview');
+  const lblUnGw = document.getElementById('lblAllocUnmatchedGw');
+  const lblUnBnk = document.getElementById('lblAllocUnmatchedBnk');
+
+  if (lblRec) lblRec.innerText = `₹${recVol.toLocaleString('en-IN', { minimumFractionDigits: 0 })}`;
+  if (lblRev) lblRev.innerText = `${reviewCount} cases`;
+  if (lblUnGw) lblUnGw.innerText = `₹${unmatchGwVol.toLocaleString('en-IN', { minimumFractionDigits: 0 })}`;
+  if (lblUnBnk) lblUnBnk.innerText = `₹${unmatchBnkVol.toLocaleString('en-IN', { minimumFractionDigits: 0 })}`;
 }
+
 
 // 8. TABLE PROCESSING & RENDERING
 function processTableData(report) {
@@ -705,17 +752,27 @@ async function loadAuditChain() {
     }
 
     timeline.innerHTML = data.chain.map(b => `
-      <div class="audit-block-card">
-        <div class="block-header">
+      <div class="audit-block-card" id="blockCard_${b.index}">
+        <div class="block-header" onclick="toggleBlockDetails(${b.index})" style="cursor: pointer;" title="Click to inspect Merkle payload">
           <div>
             <span class="block-index">Block #${b.index}</span>
             <span class="block-type">${b.event_type}</span>
           </div>
-          <span class="text-dark code-font">${b.timestamp}</span>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span class="text-dark code-font">${b.timestamp.substring(0, 19).replace('T', ' ')}</span>
+            <span class="badge badge-success" style="font-size: 0.68rem;">SHA-256 Sealed</span>
+          </div>
         </div>
         <div class="block-hashes">
-          <div><strong>Prev Hash:</strong> <span class="code-font">${b.previous_hash.substring(0, 24)}...</span></div>
-          <div><strong>Block Hash:</strong> <span class="code-font">${b.block_hash.substring(0, 24)}...</span></div>
+          <div><strong>Prev Hash:</strong> <span class="code-font text-muted-subtle">${b.previous_hash}</span></div>
+          <div><strong>Block Hash:</strong> <span class="code-font font-bold" style="color: var(--accent-cyan);">${b.block_hash}</span></div>
+          <div><strong>Payload Checksum:</strong> <span class="code-font text-muted-subtle">${b.payload_hash}</span></div>
+        </div>
+        <div class="block-detail-drawer hidden" id="blockDrawer_${b.index}">
+          <div class="merkle-box">
+            <span class="merkle-label">📦 Merkle Sealed Payload (Immutable JSON):</span>
+            <pre class="merkle-json">${escapeHtml(JSON.stringify(b.payload, null, 2))}</pre>
+          </div>
         </div>
       </div>
     `).join('');
@@ -723,6 +780,14 @@ async function loadAuditChain() {
     console.error('Audit load error:', err);
   }
 }
+
+function toggleBlockDetails(blockIdx) {
+  const drawer = document.getElementById(`blockDrawer_${blockIdx}`);
+  if (drawer) {
+    drawer.classList.toggle('hidden');
+  }
+}
+
 
 async function verifyAuditChain() {
   const btn = document.getElementById('btnVerifyChain');
