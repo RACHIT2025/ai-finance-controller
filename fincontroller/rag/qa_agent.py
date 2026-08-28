@@ -40,7 +40,8 @@ class ReconciliationQAAgent:
         query_clean = user_query.strip()
 
         # Check if external LLM configured and requested
-        if (settings.OPENAI_API_KEY or settings.GEMINI_API_KEY) and settings.LLM_PROVIDER in ("openai", "gemini"):
+        if (settings.OPENAI_API_KEY or settings.get_effective_gemini_key()) and settings.LLM_PROVIDER in ("openai", "gemini"):
+
             try:
                 answer = self._run_llm_rag(query_clean)
                 return {
@@ -83,10 +84,55 @@ class ReconciliationQAAgent:
             f"ANSWER:"
         )
 
-        if settings.OPENAI_API_KEY and settings.LLM_PROVIDER == "openai":
-            from langchain_community.chat_models import ChatOpenAI
-            llm = ChatOpenAI(temperature=0.0, openai_api_key=settings.OPENAI_API_KEY)
-            resp = llm.invoke(prompt)
-            return resp.content if hasattr(resp, "content") else str(resp)
+        gemini_key = settings.get_effective_gemini_key()
+        provider = settings.LLM_PROVIDER.lower()
+
+        if provider == "gemini" and gemini_key:
+            import httpx
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{settings.GEMINI_MODEL}:generateContent?key={gemini_key}"
+            payload = {
+                "contents": [
+                    {
+                        "parts": [
+                            {"text": prompt}
+                        ]
+                    }
+                ],
+                "generationConfig": {
+                    "temperature": 0.1,
+                    "maxOutputTokens": 800,
+                }
+            }
+            with httpx.Client(timeout=10.0) as client:
+                res = client.post(url, json=payload)
+                if res.status_code == 200:
+                    data = res.json()
+                    candidates = data.get("candidates", [])
+                    if candidates and "content" in candidates[0]:
+                        parts = candidates[0]["content"].get("parts", [])
+                        if parts:
+                            return parts[0].get("text", "").strip()
+                raise RuntimeError(f"Gemini API returned status {res.status_code}: {res.text}")
+
+        elif provider == "openai" and settings.OPENAI_API_KEY:
+            try:
+                from langchain_community.chat_models import ChatOpenAI
+                llm = ChatOpenAI(temperature=0.0, openai_api_key=settings.OPENAI_API_KEY, model_name=settings.OPENAI_MODEL)
+                resp = llm.invoke(prompt)
+                return resp.content if hasattr(resp, "content") else str(resp)
+            except Exception:
+                import httpx
+                headers = {"Authorization": f"Bearer {settings.OPENAI_API_KEY}", "Content-Type": "application/json"}
+                payload = {
+                    "model": settings.OPENAI_MODEL,
+                    "messages": [{"role": "user", "content": prompt}],
+                    "temperature": 0.1,
+                }
+                with httpx.Client(timeout=10.0) as client:
+                    res = client.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload)
+                    if res.status_code == 200:
+                        return res.json()["choices"][0]["message"]["content"].strip()
+                    raise RuntimeError(f"OpenAI API returned status {res.status_code}: {res.text}")
 
         return DeterministicFallbackEngine.explain_transaction(query, self.active_report)
+

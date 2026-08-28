@@ -1,12 +1,17 @@
-// FinController Frontend Application Logic
+// FinController Frontend Application Logic - Cloud Edition
 
 let activeFilter = 'ALL';
 let currentReport = null;
 let allTableRows = [];
 
+// Studio state for customer interactive table
+let studioGwRows = [];
+let studioBnkRows = [];
+
 document.addEventListener('DOMContentLoaded', () => {
   initTabs();
   initEventListeners();
+  initStudioDefaults();
   fetchInitialData();
   startTelemetryPolling();
 });
@@ -32,6 +37,13 @@ function initTabs() {
   });
 }
 
+function switchToTab(tabId) {
+  const targetBtn = document.querySelector(`.tab-btn[data-tab="${tabId}"]`);
+  if (targetBtn) {
+    targetBtn.click();
+  }
+}
+
 // 2. EVENT LISTENERS
 function initEventListeners() {
   document.getElementById('btnRunReconcile').addEventListener('click', runReconciliation);
@@ -39,6 +51,50 @@ function initEventListeners() {
   document.getElementById('btnSendChat').addEventListener('click', sendChatMessage);
   document.getElementById('chatInput').addEventListener('keypress', (e) => {
     if (e.key === 'Enter') sendChatMessage();
+  });
+
+  // Header "Enter Your Data" button
+  const btnOpenManualStudio = document.getElementById('btnOpenManualStudio');
+  if (btnOpenManualStudio) {
+    btnOpenManualStudio.addEventListener('click', () => {
+      switchToTab('tab-studio');
+    });
+  }
+
+  // Export buttons
+  const btnExportCsv = document.getElementById('btnExportCsv');
+  if (btnExportCsv) {
+    btnExportCsv.addEventListener('click', exportReconciliationCsv);
+  }
+  const btnExportCert = document.getElementById('btnExportCert');
+  if (btnExportCert) {
+    btnExportCert.addEventListener('click', exportAuditCertificate);
+  }
+
+  // Studio Interactive Buttons
+  const btnAddGwRow = document.getElementById('btnAddGwRow');
+  if (btnAddGwRow) {
+    btnAddGwRow.addEventListener('click', () => {
+      addStudioGwRow(`pay_live_${Date.now().toString().slice(-4)}`, 1000.0, 23.6, `cust_ref_${Date.now().toString().slice(-3)}`, 'captured');
+    });
+  }
+  const btnAddBnkRow = document.getElementById('btnAddBnkRow');
+  if (btnAddBnkRow) {
+    btnAddBnkRow.addEventListener('click', () => {
+      addStudioBnkRow(`UTR_LIVE_${Date.now().toString().slice(-4)}`, 976.4, `SETTL_RZP_BATCH`);
+    });
+  }
+  const btnReconcileStudio = document.getElementById('btnReconcileStudio');
+  if (btnReconcileStudio) {
+    btnReconcileStudio.addEventListener('click', handleStudioReconciliation);
+  }
+
+  // Preset Buttons
+  document.querySelectorAll('.btn-preset').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const preset = btn.getAttribute('data-preset');
+      loadStudioPreset(preset);
+    });
   });
 
   // Table filter chips
@@ -104,7 +160,202 @@ function initEventListeners() {
   }
 }
 
-// DYNAMIC FILE UPLOAD HANDLER
+// 3. CUSTOMER DATA STUDIO (INTERACTIVE SANDBOX)
+function initStudioDefaults() {
+  loadStudioPreset('saas');
+}
+
+function loadStudioPreset(preset) {
+  studioGwRows = [];
+  studioBnkRows = [];
+
+  if (preset === 'saas') {
+    // 1-to-1 with Standard MDR (2% + 18% GST = 2.36%)
+    studioGwRows = [
+      { id: 'pay_sub_01', amount: 5000.0, fee: 118.0, ref: 'INV_SUB_101', status: 'captured' },
+      { id: 'pay_sub_02', amount: 12500.0, fee: 295.0, ref: 'INV_SUB_102', status: 'captured' },
+      { id: 'pay_sub_03', amount: 3200.0, fee: 75.52, ref: 'INV_SUB_103', status: 'captured' },
+    ];
+    studioBnkRows = [
+      { id: 'UTR_HDFC_0981', amount: 4882.0, ref: 'INV_SUB_101' },
+      { id: 'UTR_HDFC_0982', amount: 12205.0, ref: 'INV_SUB_102' },
+      { id: 'UTR_HDFC_0983', amount: 3124.48, ref: 'INV_SUB_103' },
+    ];
+  } else if (preset === 'split') {
+    // 1 Bank batch settling 3 gateway transactions (e-commerce payout)
+    studioGwRows = [
+      { id: 'pay_cart_item_A', amount: 4500.0, fee: 0.0, ref: 'BATCH_GRP_400', status: 'captured' },
+      { id: 'pay_cart_item_B', amount: 3500.0, fee: 0.0, ref: 'BATCH_GRP_400', status: 'captured' },
+      { id: 'pay_cart_item_C', amount: 2000.0, fee: 0.0, ref: 'BATCH_GRP_400', status: 'captured' },
+      { id: 'pay_unsettled_D', amount: 1800.0, fee: 0.0, ref: 'ESCROW_HOLD', status: 'captured' },
+    ];
+    studioBnkRows = [
+      { id: 'UTR_ICICI_BATCH_400', amount: 10000.0, ref: 'BATCH_GRP_400 (Items A+B+C)' },
+      { id: 'UTR_DIRECT_DEPOSIT_99', amount: 750.0, ref: 'DIRECT_OFFLINE_TRANSFER' },
+    ];
+  } else if (preset === 'ambiguous') {
+    // 2 duplicate transactions with same amount -> Engine honestly flags for human review
+    studioGwRows = [
+      { id: 'pay_AMBIG_DUP_1', amount: 999.0, fee: 0.0, ref: 'REF_CONFLICT_99', status: 'captured' },
+      { id: 'pay_AMBIG_DUP_2', amount: 999.0, fee: 0.0, ref: 'REF_CONFLICT_99', status: 'captured' },
+    ];
+    studioBnkRows = [
+      { id: 'UTR_SBI_SINGLE_999', amount: 999.0, ref: 'REF_CONFLICT_99' },
+    ];
+  } else if (preset === 'clear') {
+    studioGwRows = [];
+    studioBnkRows = [];
+  }
+
+  renderStudioTables();
+}
+
+function addStudioGwRow(id, amount, fee, ref, status) {
+  studioGwRows.push({ id, amount, fee, ref, status });
+  renderStudioTables();
+}
+
+function addStudioBnkRow(id, amount, ref) {
+  studioBnkRows.push({ id, amount, ref });
+  renderStudioTables();
+}
+
+function removeStudioGwRow(idx) {
+  studioGwRows.splice(idx, 1);
+  renderStudioTables();
+}
+
+function removeStudioBnkRow(idx) {
+  studioBnkRows.splice(idx, 1);
+  renderStudioTables();
+}
+
+function renderStudioTables() {
+  const bodyGw = document.getElementById('bodyGwStudio');
+  const bodyBnk = document.getElementById('bodyBnkStudio');
+  if (!bodyGw || !bodyBnk) return;
+
+  if (studioGwRows.length === 0) {
+    bodyGw.innerHTML = `<tr><td colspan="6" class="text-center text-muted" style="padding: 16px;">No gateway transactions. Click "+ Add Gateway Tx" or choose a preset.</td></tr>`;
+  } else {
+    bodyGw.innerHTML = studioGwRows.map((r, i) => `
+      <tr>
+        <td><input type="text" class="studio-input" value="${r.id}" onchange="studioGwRows[${i}].id = this.value"></td>
+        <td><input type="number" step="0.01" class="studio-input text-right" value="${r.amount}" onchange="studioGwRows[${i}].amount = parseFloat(this.value) || 0; updateStudioTotals();"></td>
+        <td><input type="number" step="0.01" class="studio-input text-right" value="${r.fee}" onchange="studioGwRows[${i}].fee = parseFloat(this.value) || 0; updateStudioTotals();"></td>
+        <td><input type="text" class="studio-input" value="${r.ref}" onchange="studioGwRows[${i}].ref = this.value"></td>
+        <td>
+          <select class="studio-select" onchange="studioGwRows[${i}].status = this.value">
+            <option value="captured" ${r.status === 'captured' ? 'selected' : ''}>captured</option>
+            <option value="failed" ${r.status === 'failed' ? 'selected' : ''}>failed</option>
+            <option value="refunded" ${r.status === 'refunded' ? 'selected' : ''}>refunded</option>
+          </select>
+        </td>
+        <td class="text-center">
+          <button class="btn-icon-del" onclick="removeStudioGwRow(${i})" title="Delete row">&times;</button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  if (studioBnkRows.length === 0) {
+    bodyBnk.innerHTML = `<tr><td colspan="4" class="text-center text-muted" style="padding: 16px;">No bank credit rows. Click "+ Add Bank Credit".</td></tr>`;
+  } else {
+    bodyBnk.innerHTML = studioBnkRows.map((r, i) => `
+      <tr>
+        <td><input type="text" class="studio-input" value="${r.id}" onchange="studioBnkRows[${i}].id = this.value"></td>
+        <td><input type="number" step="0.01" class="studio-input text-right" value="${r.amount}" onchange="studioBnkRows[${i}].amount = parseFloat(this.value) || 0; updateStudioTotals();"></td>
+        <td><input type="text" class="studio-input" value="${r.ref}" onchange="studioBnkRows[${i}].ref = this.value"></td>
+        <td class="text-center">
+          <button class="btn-icon-del" onclick="removeStudioBnkRow(${i})" title="Delete row">&times;</button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  updateStudioTotals();
+}
+
+function updateStudioTotals() {
+  const netGw = studioGwRows.reduce((acc, r) => acc + (parseFloat(r.amount) || 0) - (parseFloat(r.fee) || 0), 0);
+  const totalBnk = studioBnkRows.reduce((acc, r) => acc + (parseFloat(r.amount) || 0), 0);
+  
+  const gwTotalEl = document.getElementById('studioGwTotal');
+  const bnkTotalEl = document.getElementById('studioBnkTotal');
+  if (gwTotalEl) gwTotalEl.innerText = `₹${netGw.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  if (bnkTotalEl) bnkTotalEl.innerText = `₹${totalBnk.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+async function handleStudioReconciliation() {
+  const btn = document.getElementById('btnReconcileStudio');
+  if (!studioGwRows.length || !studioBnkRows.length) {
+    alert('Please enter at least 1 gateway transaction and 1 bank credit.');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.innerText = 'Reconciling Live...';
+
+  const payload = {
+    gateway_transactions: studioGwRows.map(r => ({
+      id: r.id,
+      amount: parseFloat(r.amount) || 0.0,
+      fee: parseFloat(r.fee) || 0.0,
+      reference_id: r.ref || r.id,
+      status: r.status || 'captured',
+    })),
+    bank_transactions: studioBnkRows.map(r => ({
+      id: r.id,
+      amount: parseFloat(r.amount) || 0.0,
+      reference_id: r.ref || r.id,
+      description: r.ref || 'Customer Direct Entry',
+    })),
+    session_title: 'Customer Live Sandbox Session',
+  };
+
+  try {
+    const res = await fetch('/api/reconcile/manual-entry', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.detail || 'Reconciliation failed');
+    }
+
+    const data = await res.json();
+    currentReport = data;
+    updateKPIs(data.summary, data.audit_block_count, data.audit_chain_head);
+    processTableData(data);
+    renderTable();
+    loadAuditChain();
+    loadSummary();
+
+    // Switch to reconciliation results tab
+    switchToTab('tab-reconciliation');
+  } catch (err) {
+    alert(`Reconciliation error: ${err.message}`);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = `
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+      Reconcile My Data Live
+    `;
+  }
+}
+
+// 4. EXPORT HANDLERS
+function exportReconciliationCsv() {
+  window.location.href = '/api/export/csv';
+}
+
+function exportAuditCertificate() {
+  window.open('/api/export/audit-cert', '_blank');
+}
+
+// 5. FILE UPLOAD HANDLER
 async function handleCustomFileUpload(e) {
   e.preventDefault();
   const gwFile = document.getElementById('uploadGwFile').files[0];
@@ -159,7 +410,8 @@ async function handleCustomFileUpload(e) {
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
         Reconcile Live Data
       `;
-    }, 1200);
+      switchToTab('tab-reconciliation');
+    }, 1000);
   } catch (err) {
     statusMsg.className = 'upload-status-msg error';
     statusMsg.innerText = `Error: ${err.message}`;
@@ -172,7 +424,7 @@ async function handleCustomFileUpload(e) {
   }
 }
 
-// 3. RECONCILIATION RUNNER
+// 6. BENCHMARK RUNNER
 async function runReconciliation() {
   const btn = document.getElementById('btnRunReconcile');
   btn.disabled = true;
@@ -193,155 +445,222 @@ async function runReconciliation() {
     btn.disabled = false;
     btn.innerHTML = `
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
-      Run Reconciliation
+      Benchmark (50+ Cases)
     `;
   }
 }
 
-// 4. KPI STATS UPDATE
-function updateKPIs(s, auditCount, chainHead) {
-  if (!s) return;
-  document.getElementById('kpiReconciledVol').innerText = `₹${s.reconciled_volume.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
-  document.getElementById('kpiTotalVol').innerText = `Gateway: ₹${s.total_gateway_volume.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
-  document.getElementById('kpiAutoRate').innerText = `${s.auto_match_rate.toFixed(1)}%`;
-  document.getElementById('kpiMatchedPairs').innerText = `${s.auto_matched_count} high-confidence pairs`;
-  document.getElementById('kpiHumanReview').innerText = `${s.human_review_count}`;
-  document.getElementById('kpiFeesVol').innerText = `₹${s.total_fee_volume.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
-  document.getElementById('kpiAuditBlocks').innerText = `${auditCount || 0}`;
-  document.getElementById('kpiChainHead').innerText = chainHead ? `Head: ${chainHead.substring(0, 10)}...` : 'Genesis sealed';
+// 7. KPI STATS UPDATER
+function updateKPIs(summary, auditBlocks, chainHead) {
+  if (!summary) return;
+  document.getElementById('kpiReconciledVol').innerText = `₹${(summary.reconciled_volume || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
+  document.getElementById('kpiTotalVol').innerText = `Processed ₹${(summary.total_gateway_volume || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })} total`;
 
-  // Counts on filter chips
-  document.getElementById('cntAuto').innerText = `${s.auto_matched_count}`;
-  document.getElementById('cntReview').innerText = `${s.human_review_count}`;
-  document.getElementById('cntUnmatchedGw').innerText = `${s.unmatched_gateway_count}`;
-  document.getElementById('cntUnmatchedBnk').innerText = `${s.unmatched_bank_count}`;
+  const rate = summary.match_rate !== undefined ? summary.match_rate : summary.auto_match_rate;
+  document.getElementById('kpiAutoRate').innerText = `${(rate || 0).toFixed(1)}%`;
+  document.getElementById('kpiMatchedPairs').innerText = `${summary.auto_matched_count || 0} high-confidence pairs`;
+
+  document.getElementById('kpiHumanReview').innerText = summary.human_review_count || 0;
+  document.getElementById('kpiFeesVol').innerText = `₹${(summary.total_fee_volume || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
+
+  document.getElementById('kpiAuditBlocks').innerText = auditBlocks || 1;
+  document.getElementById('kpiChainHead').innerText = chainHead ? `Hash: ${chainHead.substring(0, 12)}...` : 'Sealed & Valid';
 }
 
-// 5. PROCESS & RENDER TABLE
+// 8. TABLE PROCESSING & RENDERING
 function processTableData(report) {
   allTableRows = [];
 
-  // Auto Matches
-  report.matches.forEach(m => {
-    allTableRows.push({
-      category: 'AUTO_MATCHED',
-      id: m.match_id,
-      reason: m.reason_code,
-      gw_refs: m.gateway_tx_ids.join(', '),
-      bnk_refs: m.bank_tx_ids.join(', '),
-      discrepancy: `₹${m.amount_discrepancy.toFixed(2)}`,
-      confidence: m.confidence,
-      explanation: m.explanation,
-    });
-  });
+  let countAuto = 0;
+  let countReview = 0;
+  let countUnmatchedGw = 0;
+  let countUnmatchedBnk = 0;
 
-  // Human Reviews
-  report.human_reviews.forEach(hr => {
-    allTableRows.push({
-      category: 'NEEDS_HUMAN_REVIEW',
-      id: hr.match_id,
-      reason: hr.reason_code,
-      gw_refs: hr.gateway_tx_ids.join(', '),
-      bnk_refs: hr.bank_tx_ids.join(', '),
-      discrepancy: `₹${hr.amount_discrepancy.toFixed(2)}`,
-      confidence: hr.confidence,
-      explanation: hr.explanation,
+  // 1. Auto-Matched Records
+  if (report.matches) {
+    report.matches.forEach(m => {
+      countAuto++;
+      allTableRows.push({
+        category: 'AUTO_MATCHED',
+        id: m.match_id,
+        reason_code: m.reason_code,
+        gw_refs: m.gateway_tx_ids.join(', '),
+        bnk_refs: m.bank_tx_ids.join(', '),
+        discrepancy: m.amount_discrepancy,
+        confidence: m.confidence_score,
+        explanation: m.explanation,
+        settled_net: m.settled_net_amount,
+      });
     });
-  });
+  }
 
-  // Unmatched Gateway
-  report.unmatched_gateway.forEach(gw => {
-    allTableRows.push({
-      category: 'UNMATCHED_GW',
-      id: gw.id,
-      reason: gw.metadata?.unmatched_reason || 'UNSETTLED_GATEWAY_PAYMENT',
-      gw_refs: gw.reference_id,
-      bnk_refs: 'None',
-      discrepancy: `₹${gw.net_amount.toFixed(2)}`,
-      confidence: 0.0,
-      explanation: `Gateway payment of ₹${gw.amount.toFixed(2)} has no corresponding bank settlement.`,
+  // 2. Needs Human Review (Ambiguous / Duplicate Cases)
+  if (report.human_reviews) {
+    report.human_reviews.forEach(hr => {
+      countReview++;
+      allTableRows.push({
+        category: 'NEEDS_HUMAN_REVIEW',
+        id: hr.match_id,
+        reason_code: hr.reason_code,
+        gw_refs: hr.gateway_tx_ids.join(', '),
+        bnk_refs: hr.bank_tx_ids.join(', '),
+        discrepancy: hr.amount_discrepancy,
+        confidence: hr.confidence_score,
+        explanation: hr.explanation,
+        settled_net: hr.settled_net_amount,
+      });
     });
-  });
+  }
 
-  // Unmatched Bank
-  report.unmatched_bank.forEach(bnk => {
-    allTableRows.push({
-      category: 'UNMATCHED_BNK',
-      id: bnk.id,
-      reason: bnk.metadata?.unmatched_reason || 'ORPHANED_BANK_CREDIT',
-      gw_refs: 'None',
-      bnk_refs: bnk.reference_id,
-      discrepancy: `₹${bnk.net_amount.toFixed(2)}`,
-      confidence: 0.0,
-      explanation: `Direct bank deposit of ₹${bnk.net_amount.toFixed(2)} has no gateway source entry.`,
+  // 3. Unmatched Gateway Transactions
+  if (report.unmatched_gateway) {
+    report.unmatched_gateway.forEach(ug => {
+      countUnmatchedGw++;
+      const reason = ug.metadata && ug.metadata.unmatched_reason ? ug.metadata.unmatched_reason : 'UNSETTLED_GATEWAY_PAYMENT';
+      allTableRows.push({
+        category: 'UNMATCHED_GW',
+        id: ug.id,
+        reason_code: reason,
+        gw_refs: ug.id + (ug.reference_id ? ` (${ug.reference_id})` : ''),
+        bnk_refs: '—',
+        discrepancy: ug.net_amount,
+        confidence: 0.0,
+        explanation: `Gross ₹${ug.amount.toFixed(2)}, fee ₹${ug.fee.toFixed(2)}, status '${ug.status}'. No matching bank deposit in clearing window (pending clearing / escrow).`,
+        settled_net: ug.net_amount,
+      });
     });
-  });
+  }
+
+  // 4. Unmatched Bank Credits
+  if (report.unmatched_bank) {
+    report.unmatched_bank.forEach(ub => {
+      countUnmatchedBnk++;
+      const reason = ub.metadata && ub.metadata.unmatched_reason ? ub.metadata.unmatched_reason : 'ORPHANED_BANK_CREDIT';
+      allTableRows.push({
+        category: 'UNMATCHED_BNK',
+        id: ub.id,
+        reason_code: reason,
+        gw_refs: '—',
+        bnk_refs: ub.id + (ub.reference_id ? ` (${ub.reference_id})` : ''),
+        discrepancy: ub.net_amount,
+        confidence: 0.0,
+        explanation: `Narration: ${ub.description || 'Direct Credit'}. Direct bank deposit without matching gateway settlement.`,
+        settled_net: ub.net_amount,
+      });
+    });
+  }
+
+  // Update counts
+  document.getElementById('cntAuto').innerText = countAuto;
+  document.getElementById('cntReview').innerText = countReview;
+  document.getElementById('cntUnmatchedGw').innerText = countUnmatchedGw;
+  document.getElementById('cntUnmatchedBnk').innerText = countUnmatchedBnk;
 }
 
 function renderTable() {
   const tbody = document.getElementById('reconTableBody');
-  const searchVal = document.getElementById('tableSearchInput').value.toLowerCase().trim();
+  const query = document.getElementById('tableSearchInput').value.toLowerCase().trim();
 
-  let filtered = allTableRows.filter(row => {
+  const filtered = allTableRows.filter(row => {
     if (activeFilter !== 'ALL' && row.category !== activeFilter) return false;
-    if (searchVal) {
-      const matchStr = `${row.id} ${row.reason} ${row.gw_refs} ${row.bnk_refs} ${row.discrepancy}`.toLowerCase();
-      return matchStr.includes(searchVal);
+    if (query) {
+      const matchSearch =
+        row.id.toLowerCase().includes(query) ||
+        row.reason_code.toLowerCase().includes(query) ||
+        row.gw_refs.toLowerCase().includes(query) ||
+        row.bnk_refs.toLowerCase().includes(query) ||
+        row.explanation.toLowerCase().includes(query) ||
+        row.settled_net.toString().includes(query);
+      if (!matchSearch) return false;
     }
     return true;
   });
 
   if (filtered.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="8" class="text-center empty-state">No matching reconciliation records found.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="8" class="text-center empty-state">No records match the selected filter.</td></tr>`;
     return;
   }
 
   tbody.innerHTML = filtered.map(r => {
-    let catBadge = '';
-    if (r.category === 'AUTO_MATCHED') catBadge = `<span class="category-tag cat-auto">Auto Matched</span>`;
-    else if (r.category === 'NEEDS_HUMAN_REVIEW') catBadge = `<span class="category-tag cat-review">Human Review</span>`;
-    else catBadge = `<span class="category-tag cat-unmatched">Unmatched</span>`;
+    let badgeClass = 'badge-success';
+    let label = 'Auto-Matched';
+
+    if (r.category === 'NEEDS_HUMAN_REVIEW') {
+      badgeClass = 'badge-warning';
+      label = 'Needs Review';
+    } else if (r.category === 'UNMATCHED_GW') {
+      badgeClass = 'badge-danger';
+      label = 'Unmatched GW';
+    } else if (r.category === 'UNMATCHED_BNK') {
+      badgeClass = 'badge-danger';
+      label = 'Unmatched BNK';
+    }
 
     const confPct = Math.round(r.confidence * 100);
+    let confBarColor = confPct >= 85 ? 'var(--accent-emerald)' : confPct >= 40 ? 'var(--accent-amber)' : 'var(--accent-rose)';
 
     return `
       <tr>
-        <td>${catBadge}</td>
-        <td><span class="code-font">${r.id}</span></td>
-        <td><span class="code-font">${r.reason}</span></td>
-        <td><span class="code-font">${r.gw_refs}</span></td>
-        <td><span class="code-font">${r.bnk_refs}</span></td>
-        <td>${r.discrepancy}</td>
+        <td><span class="badge ${badgeClass}">${label}</span></td>
+        <td class="code-font font-bold">${r.id}</td>
+        <td><span class="reason-pill">${r.reason_code}</span></td>
+        <td class="code-font text-muted-subtle">${r.gw_refs}</td>
+        <td class="code-font text-muted-subtle">${r.bnk_refs}</td>
+        <td class="amount-cell">₹${Math.abs(r.discrepancy).toFixed(2)}</td>
         <td>
-          <div class="confidence-bar">
-            <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: ${confPct}%"></div></div>
-            <span>${confPct}%</span>
+          <div class="conf-wrap">
+            <div class="conf-bar-bg"><div class="conf-bar-fill" style="width: ${confPct}%; background-color: ${confBarColor};"></div></div>
+            <span class="conf-val">${confPct}%</span>
           </div>
         </td>
         <td>
-          <button class="btn-sm" onclick="askAboutRecord('${r.id}')">Ask AI</button>
+          <button class="btn-icon" title="Ask AI Copilot to explain" onclick="askAiCopilot('${r.id}')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            Explain
+          </button>
         </td>
       </tr>
     `;
   }).join('');
 }
 
-window.askAboutRecord = function(recordId) {
-  document.querySelector('.tab-btn[data-tab="tab-qa"]').click();
-  document.getElementById('chatInput').value = `Why did record ${recordId} reconcile or fail?`;
+function askAiCopilot(entityId) {
+  switchToTab('tab-qa');
+  document.getElementById('chatInput').value = `Explain match decision and reason for entity ${entityId}`;
   sendChatMessage();
-};
+}
 
-// 6. AI Q&A CHAT
+// 9. AI Q&A CHAT
 async function sendChatMessage() {
   const input = document.getElementById('chatInput');
   const query = input.value.trim();
   if (!query) return;
 
+  const chatContainer = document.getElementById('chatMessages');
+  
+  // Append User message
+  chatContainer.innerHTML += `
+    <div class="chat-message user">
+      <div class="message-body">
+        <p>${escapeHtml(query)}</p>
+      </div>
+      <div class="message-avatar">👤</div>
+    </div>
+  `;
   input.value = '';
-  appendChatMessage('user', query);
+  chatContainer.scrollTop = chatContainer.scrollHeight;
 
-  const botMsgElem = appendChatMessage('bot', 'Investigating deterministic reconciliation outputs...');
+  // Append Thinking state
+  const loadingId = `load_${Date.now()}`;
+  chatContainer.innerHTML += `
+    <div class="chat-message bot" id="${loadingId}">
+      <div class="message-avatar">🤖</div>
+      <div class="message-body">
+        <p class="text-muted">Analyzing reconciliation output & audit trail...</p>
+      </div>
+    </div>
+  `;
+  chatContainer.scrollTop = chatContainer.scrollHeight;
 
   try {
     const res = await fetch('/api/query', {
@@ -350,53 +669,42 @@ async function sendChatMessage() {
       body: JSON.stringify({ query }),
     });
     const data = await res.json();
-    botMsgElem.querySelector('.message-body').innerHTML = renderMarkdown(data.answer);
-    document.getElementById('chatMessages').scrollTop = document.getElementById('chatMessages').scrollHeight;
+    const loadEl = document.getElementById(loadingId);
+    if (loadEl) {
+      loadEl.innerHTML = `
+        <div class="message-avatar">🤖</div>
+        <div class="message-body">
+          <div class="message-source-tag">${data.source || 'AI Copilot'}</div>
+          <div>${renderMarkdown(data.answer)}</div>
+        </div>
+      `;
+    }
   } catch (err) {
-    botMsgElem.querySelector('.message-body').innerHTML = `<p class="text-danger">Failed to connect to agent: ${err.message}</p>`;
-    document.getElementById('chatMessages').scrollTop = document.getElementById('chatMessages').scrollHeight;
+    const loadEl = document.getElementById(loadingId);
+    if (loadEl) {
+      loadEl.innerHTML = `
+        <div class="message-avatar">🤖</div>
+        <div class="message-body text-danger">
+          <p>Error retrieving explanation: ${err.message}</p>
+        </div>
+      `;
+    }
   }
+  chatContainer.scrollTop = chatContainer.scrollHeight;
 }
 
-function appendChatMessage(role, text) {
-  const container = document.getElementById('chatMessages');
-  const msgDiv = document.createElement('div');
-  msgDiv.className = `chat-message ${role}`;
-  msgDiv.innerHTML = `
-    <div class="message-avatar">${role === 'user' ? '👤' : '🤖'}</div>
-    <div class="message-body">${role === 'user' ? `<p>${text}</p>` : renderMarkdown(text)}</div>
-  `;
-  container.appendChild(msgDiv);
-  container.scrollTop = container.scrollHeight;
-  return msgDiv;
-}
-
-function renderMarkdown(text) {
-  if (!text) return '';
-  return text
-    .replace(/^### (.*$)/gim, '<h3>$1</h3>')
-    .replace(/^## (.*$)/gim, '<h2>$1</h2>')
-    .replace(/^# (.*$)/gim, '<h1>$1</h1>')
-    .replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>')
-    .replace(/\*(.*?)\*/gim, '<em>$1</em>')
-    .replace(/`(.*?)`/gim, '<code class="code-font">$1</code>')
-    .replace(/\n\n/gim, '<br><br>')
-    .replace(/\n/gim, '<br>');
-}
-
-// 7. AUDIT CHAIN EXPLORER
+// 10. AUDIT TRAIL LOADER & VERIFIER
 async function loadAuditChain() {
   try {
     const res = await fetch('/api/audit/chain');
     const data = await res.json();
     const timeline = document.getElementById('auditChainTimeline');
-
     if (!data.chain || data.chain.length === 0) {
-      timeline.innerHTML = '<p class="text-muted">No audit blocks recorded yet.</p>';
+      timeline.innerHTML = '<p class="text-muted">No audit blocks sealed yet.</p>';
       return;
     }
 
-    timeline.innerHTML = data.chain.slice(-8).reverse().map(b => `
+    timeline.innerHTML = data.chain.map(b => `
       <div class="audit-block-card">
         <div class="block-header">
           <div>
@@ -463,7 +771,7 @@ async function verifyAuditChain() {
   }
 }
 
-// 8. SUMMARY LOADER
+// 11. SUMMARY LOADER
 async function loadSummary() {
   try {
     const res = await fetch('/api/summary');
@@ -474,7 +782,7 @@ async function loadSummary() {
   }
 }
 
-// 9. RESILIENCE FAULT SIMULATION
+// 12. RESILIENCE FAULT SIMULATION
 async function simulateFault(scenario) {
   try {
     await fetch('/api/simulate-failure', {
@@ -488,7 +796,7 @@ async function simulateFault(scenario) {
   }
 }
 
-// 10. TELEMETRY POLLING
+// 13. TELEMETRY POLLING
 function startTelemetryPolling() {
   fetchTelemetry();
   setInterval(fetchTelemetry, 2500);
@@ -517,10 +825,28 @@ async function fetchTelemetry() {
       </div>
     `).join('');
   } catch (err) {
-    // Ignore polling network glitches
+    // Ignore polling glitches
   }
 }
 
 async function fetchInitialData() {
   await runReconciliation();
+}
+
+// Helpers
+function escapeHtml(str) {
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function renderMarkdown(md) {
+  if (!md) return '';
+  return md
+    .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+    .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+    .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+    .replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>')
+    .replace(/\*(.*?)\*/gim, '<em>$1</em>')
+    .replace(/`([^`]+)`/gim, '<code>$1</code>')
+    .replace(/\n\n/gim, '<br><br>')
+    .replace(/\n/gim, '<br>');
 }

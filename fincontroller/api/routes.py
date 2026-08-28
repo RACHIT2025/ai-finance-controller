@@ -3,6 +3,7 @@ FastAPI REST API Routes for FinController.
 """
 
 from datetime import datetime
+import json
 import os
 from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
@@ -233,3 +234,260 @@ async def simulate_failure(req: FailureSimulationRequest):
         return {"status": "error", "message": "Need more blocks to simulate tamper."}
 
     return {"status": "unknown_scenario"}
+
+
+class ManualGatewayTx(BaseModel):
+    id: str
+    amount: float
+    fee: Optional[float] = 0.0
+    reference_id: Optional[str] = ""
+    status: Optional[str] = "captured"
+    timestamp: Optional[str] = None
+
+
+class ManualBankTx(BaseModel):
+    id: str
+    amount: float
+    reference_id: Optional[str] = ""
+    description: Optional[str] = ""
+    timestamp: Optional[str] = None
+
+
+class ManualReconciliationRequest(BaseModel):
+    gateway_transactions: List[ManualGatewayTx]
+    bank_transactions: List[ManualBankTx]
+    session_title: Optional[str] = "Customer Live Sandbox"
+
+
+@router.get("/health")
+async def health_check():
+    """Production health check for cloud uptime monitoring and load balancers."""
+    from fincontroller.core.config import settings
+    return {
+        "status": "healthy",
+        "service": "Razorpay AI Finance Controller",
+        "version": "2.0.0",
+        "environment": settings.ENVIRONMENT,
+        "llm_provider": settings.LLM_PROVIDER,
+        "gemini_active": bool(settings.get_effective_gemini_key()),
+        "openai_active": bool(settings.OPENAI_API_KEY),
+        "timestamp": datetime.utcnow().isoformat(),
+    }
+
+
+@router.post("/reconcile/manual-entry")
+async def reconcile_manual_entry(payload: ManualReconciliationRequest):
+    """
+    Direct Interactive Customer Data Entry.
+    Accepts row-by-row transaction lists entered directly on screen and reconciles them live.
+    """
+    global latest_report
+    from fincontroller.core.models import TransactionSource, TransactionStatus
+
+    if not payload.gateway_transactions or not payload.bank_transactions:
+        raise HTTPException(status_code=400, detail="At least one gateway transaction and one bank credit are required.")
+
+    gw_txs: List[NormalizedTransaction] = []
+    for g in payload.gateway_transactions:
+        ts = datetime.utcnow()
+        if g.timestamp:
+            try:
+                ts = datetime.fromisoformat(g.timestamp.replace("Z", "+00:00"))
+            except Exception:
+                pass
+        
+        status_enum = TransactionStatus.CAPTURED
+        if g.status and g.status.lower() in ("failed", "failure"):
+            status_enum = TransactionStatus.FAILED
+        elif g.status and g.status.lower() in ("refunded", "refund"):
+            status_enum = TransactionStatus.REFUNDED
+
+        gw_txs.append(
+            NormalizedTransaction(
+                id=g.id,
+                source=TransactionSource.RAZORPAY,
+                raw_id=g.id,
+                amount=round(float(g.amount), 2),
+                fee=round(float(g.fee or 0.0), 2),
+                net_amount=round(float(g.amount) - float(g.fee or 0.0), 2),
+                currency="INR",
+                status=status_enum,
+                timestamp=ts,
+                reference_id=g.reference_id or g.id,
+                metadata={"entry_type": "manual_interactive"},
+            )
+        )
+
+    bnk_txs: List[NormalizedTransaction] = []
+    for b in payload.bank_transactions:
+        ts = datetime.utcnow()
+        if b.timestamp:
+            try:
+                ts = datetime.fromisoformat(b.timestamp.replace("Z", "+00:00"))
+            except Exception:
+                pass
+
+        bnk_txs.append(
+            NormalizedTransaction(
+                id=b.id,
+                source=TransactionSource.BANK_LEDGER,
+                raw_id=b.id,
+                amount=round(float(b.amount), 2),
+                fee=0.0,
+                net_amount=round(float(b.amount), 2),
+                currency="INR",
+                status=TransactionStatus.CAPTURED,
+                timestamp=ts,
+                reference_id=b.reference_id or b.id,
+                description=b.description or "Direct Customer Entry",
+                metadata={"entry_type": "manual_interactive"},
+            )
+        )
+
+    session_id = f"manual_{int(datetime.now().timestamp())}"
+    engine = DeterministicMatchingEngine(session_id=session_id)
+    report = engine.reconcile(gw_txs, bnk_txs)
+
+    audit_chain.record_reconciliation_report(report)
+    qa_agent.set_report(report)
+    latest_report = report
+
+    telemetry.push(
+        level="INFO",
+        component="MANUAL_STUDIO",
+        message=f"Interactive sandbox reconciliation: {len(gw_txs)} gateway txs vs {len(bnk_txs)} bank entries. Match Rate: {report.summary.match_rate:.1f}%.",
+        metadata={"session_id": session_id, "matches": len(report.matches), "review": len(report.human_reviews)},
+    )
+
+    return report
+
+
+@router.get("/export/csv")
+async def export_reconciliation_csv():
+    """Export the active reconciliation report as a formatted CSV file."""
+    from fastapi.responses import Response
+    import io
+    import csv
+
+    if not latest_report:
+        await reconcile_benchmark()
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+
+    # 1. Header & Summary Info
+    now_str = datetime.now().isoformat()
+    writer.writerow(["# RAZORPAY AI FINANCE CONTROLLER - RECONCILIATION EXPORT"])
+    writer.writerow(["# Session ID", latest_report.session_id])
+
+    writer.writerow(["# Generated At", now_str])
+    writer.writerow(["# Match Rate (%)", f"{latest_report.summary.match_rate:.2f}"])
+    writer.writerow(["# Reconciled Volume", f"INR {latest_report.summary.reconciled_volume:.2f}"])
+    writer.writerow([])
+
+    # 2. Matches Table
+    writer.writerow(["Record Type", "Match ID", "Category", "Reason Code", "Gateway TX IDs", "Bank TX IDs", "Fee Detected", "Discrepancy", "Confidence", "Explanation"])
+
+    for m in latest_report.matches:
+        writer.writerow([
+            "AUTO_MATCHED",
+            m.match_id,
+            m.category.value,
+            m.reason_code.value,
+            "; ".join(m.gateway_tx_ids),
+            "; ".join(m.bank_tx_ids),
+            f"{m.fee_detected:.2f}",
+            f"{m.amount_discrepancy:.2f}",
+            f"{m.confidence:.2f}",
+            m.explanation,
+        ])
+
+    for hr in latest_report.human_reviews:
+        writer.writerow([
+            "NEEDS_HUMAN_REVIEW",
+            hr.match_id,
+            hr.category.value,
+            hr.reason_code.value,
+            "; ".join(hr.gateway_tx_ids),
+            "; ".join(hr.bank_tx_ids),
+            f"{hr.fee_detected:.2f}",
+            f"{hr.amount_discrepancy:.2f}",
+            f"{hr.confidence:.2f}",
+            hr.explanation,
+        ])
+
+    for ug in latest_report.unmatched_gateway:
+        writer.writerow([
+            "UNMATCHED_GATEWAY",
+            ug.id,
+            "UNMATCHED",
+            ug.metadata.get("unmatched_reason", "UNSETTLED_PAYMENT"),
+            ug.id,
+            "",
+            f"{ug.fee:.2f}",
+            f"{ug.net_amount:.2f}",
+            "0.00",
+            f"Gross INR {ug.amount:.2f}, status '{ug.status.value}'. Pending bank settlement.",
+        ])
+
+    for ub in latest_report.unmatched_bank:
+        writer.writerow([
+            "UNMATCHED_BANK",
+            ub.id,
+            "UNMATCHED",
+            ub.metadata.get("unmatched_reason", "ORPHANED_CREDIT"),
+            "",
+            ub.id,
+            "0.00",
+            f"{ub.net_amount:.2f}",
+            "0.00",
+            f"Narration: {ub.description or 'Direct deposit'}. Direct bank deposit without matching gateway settlement.",
+        ])
+
+    csv_content = output.getvalue()
+    return Response(
+        content=csv_content,
+        media_type="text/csv",
+        headers={
+            "Content-Disposition": f"attachment; filename=fincontroller_recon_{latest_report.session_id}.csv"
+        },
+    )
+
+
+@router.get("/export/audit-cert")
+async def export_audit_certificate():
+    """Export cryptographic SHA-256 tamper-evident reconciliation certificate."""
+    if not latest_report:
+        await reconcile_benchmark()
+
+    is_valid, err_idx, msg = AuditVerifier.verify_chain(audit_chain.get_chain())
+    
+    cert = {
+        "certificate_id": f"CERT-{latest_report.session_id.upper()}",
+        "issuer": "Razorpay AI Finance Controller Audit Core",
+        "issued_at_utc": datetime.now().isoformat(),
+        "cryptographic_verification": {
+            "status": "PASSED" if is_valid else "FAILED",
+            "algorithm": "SHA-256 Merkle-Style Hash Chain",
+            "chain_head_hash": audit_chain.get_head(),
+            "total_blocks_sealed": len(audit_chain.get_chain()),
+            "tamper_detected": not is_valid,
+            "verification_message": msg,
+        },
+        "reconciliation_summary": {
+            "session_id": latest_report.session_id,
+            "match_rate_percentage": round(latest_report.summary.match_rate, 2),
+            "total_gateway_volume_inr": latest_report.summary.total_gateway_volume,
+            "reconciled_settlement_volume_inr": latest_report.summary.reconciled_volume,
+            "gateway_fees_accounted_inr": latest_report.summary.total_fee_volume,
+            "auto_matched_pairs": latest_report.summary.auto_matched_count,
+            "needs_human_review_count": latest_report.summary.human_review_count,
+            "unmatched_gateway_count": latest_report.summary.unmatched_gateway_count,
+            "unmatched_bank_count": latest_report.summary.unmatched_bank_count,
+        },
+        "latest_audit_block": audit_chain.get_chain()[-1].model_dump() if audit_chain.get_chain() else None,
+    }
+
+    return cert
+
+

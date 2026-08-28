@@ -32,6 +32,9 @@ class Settings(BaseSettings):
     # RAG / LLM Configuration
     OPENAI_API_KEY: Optional[str] = None
     GEMINI_API_KEY: Optional[str] = None
+    GOOGLE_API_KEY: Optional[str] = None
+    GEMINI_MODEL: str = "gemini-2.5-flash"
+    OPENAI_MODEL: str = "gpt-4o-mini"
     LLM_PROVIDER: str = "fallback"  # 'openai', 'gemini', or 'fallback'
     CHROMA_PERSIST_DIR: str = "./data/chroma_db"
     EMBEDDING_MODEL: str = "all-MiniLM-L6-v2"
@@ -41,6 +44,10 @@ class Settings(BaseSettings):
     AUDIT_STORAGE_PATH: str = "./data/audit_log.json"
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+
+    def get_effective_gemini_key(self) -> Optional[str]:
+        return self.GEMINI_API_KEY or self.GOOGLE_API_KEY
+
 
 
 settings = Settings()
