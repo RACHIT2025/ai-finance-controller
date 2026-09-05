@@ -258,32 +258,6 @@ pytest tests/ -v
 
 ---
 
-## 🎥 5-Minute Pitch Video Script & Panel Interview Defense
-
-### 5-Minute Pitch Structure
-- **0:00–0:10 (Problem Taste)**: The financial stakes of manual reconciliation. Razorpay's framing: *"verification capacity, not generation speed, is the bottleneck."*
-- **0:10–1:30 (Build Quality & AI Judgment)**: Architectural walkthrough. Explain why numeric matching is 100% deterministic and why the LLM is strictly isolated to natural language Q&A and summary generation.
-- **1:30–3:00 (Live Fixed Benchmark & Failure Recovery)**:
-  - Demo auto-matching of 1-to-N split settlements and fee deductions on the official seeded benchmark.
-  - Demo an ambiguous duplicate case where the engine **honestly refuses to match** and routes to human review.
-  - Demo simulated upstream timeout and graceful LLM fallback in the live telemetry console.
-- **3:00–4:00 (Live Dynamic Ingestion with External Data)**:
-  - Perform a live run on external, un-rehearsed Stripe and HDFC CSV files using the **Schema-Agnostic Ingestion Engine**.
-  - Show instantaneous column auto-detection and reconciliation without code changes.
-- **4:00–4:40 (Honest Accuracy Report)**: Present the 108-case messy benchmark suite with precision, recall, and false-positive refusal rates.
-- **4:40–5:00 (Audit Trail & Future Vision)**: Run `verify-audit` proving cryptographic SHA-256 immutability.
-
-### Panel Interview Defense FAQ
-
-**Q1: Why not use an LLM for fuzzy transaction matching?**  
-*Defense:* Financial reconciliation requires strict auditability and mathematical certainty. LLMs cannot guarantee zero false positives, fail on floating-point paise rounding, and introduce non-deterministic hallucinations. We restrict LLMs strictly to semantic Q&A and human-readable summarization.
-
-**Q2: How do you handle 1-to-N split payouts?**  
-*Defense:* FinController uses a two-stage approach: (1) Reference-grouped batch resolution by UTR narration tag, and (2) Combinatorial subset-sum solver over candidate transactions within a sliding 3-day date window.
-
-**Q3: How does the audit chain prevent tampering?**  
-*Defense:* Every reconciliation decision generates an immutable block containing the previous block's SHA-256 hash, an isolated payload hash, and an HMAC salt. Changing even a single paisa in a past record breaks the cryptographic chain and triggers an instant alert in `verify-audit`.
-
 ---
 
 ## 📄 License
