@@ -3,6 +3,7 @@
 [![Live Web Application](https://img.shields.io/badge/Live%20Demo-Render%20Cloud-success?style=for-the-badge&logo=render)](https://ai-finance-controller-bhi4.onrender.com/)
 [![Interactive REST API Docs](https://img.shields.io/badge/API%20Docs-Swagger%20UI-blue?style=for-the-badge&logo=fastapi)](https://ai-finance-controller-bhi4.onrender.com/docs)
 [![Audit Chain](https://img.shields.io/badge/Audit%20Chain-SHA--256%20Tamper--Evident-emerald?style=for-the-badge)](https://ai-finance-controller-bhi4.onrender.com/)
+[![API Health Check](https://img.shields.io/badge/Health%20Check-API%20Status-brightgreen?style=for-the-badge&logo=statuspage)](https://ai-finance-controller-bhi4.onrender.com/api/health)
 
 > 🚀 **Live 24/7 Web App:** [https://ai-finance-controller-bhi4.onrender.com/](https://ai-finance-controller-bhi4.onrender.com/)  
 > 📚 **Interactive Swagger Docs:** [https://ai-finance-controller-bhi4.onrender.com/docs](https://ai-finance-controller-bhi4.onrender.com/docs)  
