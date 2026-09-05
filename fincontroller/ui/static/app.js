@@ -534,7 +534,7 @@ function processTableData(report) {
         gw_refs: m.gateway_tx_ids.join(', '),
         bnk_refs: m.bank_tx_ids.join(', '),
         discrepancy: m.amount_discrepancy,
-        confidence: m.confidence_score,
+        confidence: m.confidence,
         explanation: m.explanation,
         settled_net: m.settled_net_amount,
       });
@@ -552,7 +552,7 @@ function processTableData(report) {
         gw_refs: hr.gateway_tx_ids.join(', '),
         bnk_refs: hr.bank_tx_ids.join(', '),
         discrepancy: hr.amount_discrepancy,
-        confidence: hr.confidence_score,
+        confidence: hr.confidence,
         explanation: hr.explanation,
         settled_net: hr.settled_net_amount,
       });
@@ -571,7 +571,7 @@ function processTableData(report) {
         gw_refs: ug.id + (ug.reference_id ? ` (${ug.reference_id})` : ''),
         bnk_refs: '—',
         discrepancy: ug.net_amount,
-        confidence: 0.0,
+        confidence: null,
         explanation: `Gross ₹${ug.amount.toFixed(2)}, fee ₹${ug.fee.toFixed(2)}, status '${ug.status}'. No matching bank deposit in clearing window (pending clearing / escrow).`,
         settled_net: ug.net_amount,
       });
@@ -590,7 +590,7 @@ function processTableData(report) {
         gw_refs: '—',
         bnk_refs: ub.id + (ub.reference_id ? ` (${ub.reference_id})` : ''),
         discrepancy: ub.net_amount,
-        confidence: 0.0,
+        confidence: null,
         explanation: `Narration: ${ub.description || 'Direct Credit'}. Direct bank deposit without matching gateway settlement.`,
         settled_net: ub.net_amount,
       });
@@ -643,8 +643,16 @@ function renderTable() {
       label = 'Unmatched BNK';
     }
 
-    const confPct = Math.round(r.confidence * 100);
+    const hasConfidence = r.confidence !== null && r.confidence !== undefined;
+    const confPct = hasConfidence ? Math.round(r.confidence * 100) : 0;
     let confBarColor = confPct >= 85 ? 'var(--accent-emerald)' : confPct >= 40 ? 'var(--accent-amber)' : 'var(--accent-rose)';
+
+    const confCellHtml = hasConfidence
+      ? `<div class="conf-wrap">
+            <div class="conf-bar-bg"><div class="conf-bar-fill" style="width: ${confPct}%; background-color: ${confBarColor};"></div></div>
+            <span class="conf-val">${confPct}%</span>
+          </div>`
+      : `<span class="conf-val text-muted-subtle" title="No confidence score — unmatched record">—</span>`;
 
     return `
       <tr>
@@ -655,10 +663,7 @@ function renderTable() {
         <td class="code-font text-muted-subtle">${r.bnk_refs}</td>
         <td class="amount-cell">₹${Math.abs(r.discrepancy).toFixed(2)}</td>
         <td>
-          <div class="conf-wrap">
-            <div class="conf-bar-bg"><div class="conf-bar-fill" style="width: ${confPct}%; background-color: ${confBarColor};"></div></div>
-            <span class="conf-val">${confPct}%</span>
-          </div>
+          ${confCellHtml}
         </td>
         <td>
           <button class="btn-icon" title="Ask AI Copilot to explain" onclick="askAiCopilot('${r.id}')">
